@@ -39,6 +39,15 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-orange-50 via-white to-green-50 font-[family-name:var(--font-geist-sans)] p-8 relative animate-[fade-in_0.8s_ease-in-out]">
       
+      {/* Top Left Universal Login */}
+      <div className="absolute top-4 left-4 flex gap-2">
+        <Link href="/login">
+          <button className="bg-white hover:bg-slate-50 text-slate-800 font-extrabold px-5 py-2.5 rounded-full shadow border border-orange-100 text-sm transition hover:shadow-md cursor-pointer flex items-center gap-1.5 active:scale-95">
+            🔑 Login
+          </button>
+        </Link>
+      </div>
+
       {/* Language Selector */}
       <div className="absolute top-4 right-4 flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow border border-orange-100 transition hover:shadow-md">
         <span className="text-lg">🌐</span>
@@ -130,7 +139,7 @@ export default function Home() {
           </div>
 
           {/* Admin Login Button */}
-          <Link href="/admin/dashboard" className="mt-4">
+          <Link href="/admin/login" className="mt-4">
             <button className="px-6 py-2.5 rounded-full bg-slate-800 hover:bg-slate-900 text-white font-bold shadow-md transition hover:-translate-y-0.5 flex items-center gap-2 text-sm cursor-pointer">
               <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>

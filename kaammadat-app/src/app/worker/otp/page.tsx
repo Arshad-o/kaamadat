@@ -14,6 +14,7 @@ export default function WorkerOTP() {
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [simulatedOtp, setSimulatedOtp] = useState('');
 
   // References for automatic focus switching
   const inputRefs = [
@@ -26,6 +27,8 @@ export default function WorkerOTP() {
   useEffect(() => {
     const savedEmail = localStorage.getItem('kaammadat_user_email') || 'your email';
     setEmail(savedEmail);
+    const savedSimulated = localStorage.getItem('kaammadat_simulated_otp') || '';
+    setSimulatedOtp(savedSimulated);
   }, []);
 
   const handleChange = (index: number, value: string) => {
@@ -93,6 +96,18 @@ export default function WorkerOTP() {
         
         {!verified ? (
           <>
+            {simulatedOtp && (
+              <div className="bg-orange-50 border border-orange-200 text-orange-850 p-4 rounded-xl text-xs font-bold mb-6 text-left flex items-start gap-3 shadow-sm border-l-4 border-l-orange-500 animate-[pulse_2s_infinite]">
+                <span className="text-lg">💡</span>
+                <div>
+                  <p className="font-black text-orange-950 text-sm">Developer Sandbox Mode</p>
+                  <p className="mt-1 font-semibold text-orange-850 leading-relaxed">
+                    Gmail is currently blocked or unset. Use this test OTP to verify:
+                    <span className="bg-orange-200 text-orange-950 font-black px-2 py-0.5 rounded ml-1 text-sm tracking-widest font-mono select-all border border-orange-300">{simulatedOtp}</span>
+                  </p>
+                </div>
+              </div>
+            )}
             <h2 className="text-3xl font-extrabold text-gray-800 tracking-tight">{t('verify_otp')}</h2>
             <p className="text-gray-600 mt-3 mb-6 text-sm font-medium">
               {t('enter_otp_sent_to')} <span className="text-orange-600 font-bold block mt-1 text-base">{email}</span> {t('through')} <span className="text-blue-600 font-bold">kaammadat@gmail.com</span>

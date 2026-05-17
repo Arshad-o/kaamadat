@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 // Simple check to make sure email config is available
 const GMAIL_USER = process.env.GMAIL_USER || 'kaammadat@gmail.com';
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS;
 
 /**
  * Sends a 4-digit OTP code to the recipient's email using Nodemailer.
@@ -33,9 +33,11 @@ export async function sendOTP(email: string) {
       };
     }
 
-    // Configure SMTP transport
+    // Configure SMTP transport with explicit SSL port 465 for cloud hosting environments
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: GMAIL_USER,
         pass: GMAIL_APP_PASSWORD,

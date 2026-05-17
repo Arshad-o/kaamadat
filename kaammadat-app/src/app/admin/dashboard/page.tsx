@@ -1,15 +1,37 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
   const [reports, setReports] = useState([
     { id: 1, type: 'Fraud', worker: 'Rahul Kumar (ID: 1029)', giver: 'Anand Sharma (ID: 8821)', job: 'Electrician (Wiring)', reason: 'Not paying promised salary', status: 'Pending' },
     { id: 2, type: 'Skill Issue', worker: 'Amit Patel (ID: 3341)', giver: 'BuildIt Co (ID: 9912)', job: 'House Construction', reason: 'Worker lacks basic carpentry skills', status: 'Pending' }
   ]);
 
+  useEffect(() => {
+    const isAuth = document.cookie.includes('kaammadat_authenticated=true') && 
+                   document.cookie.includes('kaammadat_user_type=admin');
+    if (!isAuth) {
+      router.push('/admin/login');
+    } else {
+      setAuthorized(true);
+    }
+  }, [router]);
+
   const handleEvaporate = (id: number) => {
     setReports(reports.map(r => r.id === id ? { ...r, status: 'EVAPORATED (Banned)' } : r));
   };
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <span className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+        <p className="text-slate-400 font-bold mt-4 tracking-wider uppercase text-sm">Authenticating Admin Session...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 font-[family-name:var(--font-geist-sans)] p-4 md:p-8">

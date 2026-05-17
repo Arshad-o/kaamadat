@@ -17,10 +17,10 @@ function ForgotPasswordContent() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // Feedback
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [simulatedOtp, setSimulatedOtp] = useState('');
 
   // References for automatic OTP box switching
   const inputRefs = [
@@ -45,8 +45,13 @@ function ForgotPasswordContent() {
     setLoading(true);
 
     try {
-      const result = await requestPasswordResetOTP(email, role);
+      const result = await requestPasswordResetOTP(email, role) as any;
       if (result.success) {
+        if (result.simulated && result.otp) {
+          setSimulatedOtp(result.otp);
+        } else {
+          setSimulatedOtp('');
+        }
         setStep(2);
         setSuccess('Verification OTP has been sent to your email.');
       } else {
@@ -232,6 +237,19 @@ function ForgotPasswordContent() {
                 Enter the 4-digit code sent to: <span className="font-bold text-orange-500 block mt-0.5">{email}</span>
               </p>
             </div>
+
+            {simulatedOtp && (
+              <div className="bg-orange-50 border border-orange-200 text-orange-850 p-4 rounded-xl text-xs font-bold mb-6 text-left flex items-start gap-3 shadow-sm border-l-4 border-l-orange-500 animate-[pulse_2s_infinite] dark:bg-slate-950 dark:border-slate-800 dark:text-orange-400">
+                <span className="text-lg">💡</span>
+                <div>
+                  <p className="font-black text-orange-950 dark:text-orange-350 text-sm">Developer Sandbox Mode</p>
+                  <p className="mt-1 font-semibold leading-relaxed">
+                    Gmail is currently blocked or unset. Use this test OTP to verify:
+                    <span className="bg-orange-200 text-orange-950 dark:bg-orange-950 dark:text-orange-300 font-black px-2 py-0.5 rounded ml-1 text-sm tracking-widest font-mono select-all border border-orange-300 dark:border-orange-900">{simulatedOtp}</span>
+                  </p>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleResetPassword} className="space-y-5">
               {error && (

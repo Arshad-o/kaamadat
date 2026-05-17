@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { sendOTP } from '@/app/actions/emailActions';
+import { registerUser } from '@/app/actions/userActions';
 
 export default function WorkerRegister() {
   const { t } = useLanguage();
@@ -15,6 +15,7 @@ export default function WorkerRegister() {
     email: '',
     aadhar: '',
     address: '',
+    password: '',
     terms: false,
   });
 
@@ -35,7 +36,7 @@ export default function WorkerRegister() {
     e.preventDefault();
     setError('');
 
-    if (!formData.name || !formData.mobile || !formData.email || !formData.aadhar || !formData.address) {
+    if (!formData.name || !formData.mobile || !formData.email || !formData.aadhar || !formData.address || !formData.password) {
       setError('Please fill in all fields.');
       return;
     }
@@ -47,14 +48,29 @@ export default function WorkerRegister() {
 
     setLoading(true);
     try {
-      // Trigger the real-time OTP transmission
-      const result = await sendOTP(formData.email);
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('mobile', formData.mobile);
+      data.append('email', formData.email);
+      data.append('aadhar', formData.aadhar);
+      data.append('address', formData.address);
+      data.append('password', formData.password);
+      data.append('type', 'worker');
+
+      // Trigger the real-time registration & OTP transmission
+      const result = await registerUser(data) as any;
       if (result.success) {
         // Save worker details to localStorage for access on dashboard & OTP screens
         localStorage.setItem('kaammadat_user_email', formData.email);
         localStorage.setItem('kaammadat_user_name', formData.name);
         localStorage.setItem('kaammadat_user_mobile', formData.mobile);
         localStorage.setItem('kaammadat_user_type', 'worker');
+
+        if (result.otpResult?.simulated && result.otpResult?.otp) {
+          localStorage.setItem('kaammadat_simulated_otp', result.otpResult.otp);
+        } else {
+          localStorage.removeItem('kaammadat_simulated_otp');
+        }
 
         router.push('/worker/otp');
       } else {
@@ -136,6 +152,19 @@ export default function WorkerRegister() {
           </div>
 
           <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Set Password</label>
+            <input 
+              type="password" 
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
+              placeholder="Min 6 characters" 
+              required
+            />
+          </div>
+
+          <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">{t('address')}</label>
             <textarea 
               name="address"
@@ -172,6 +201,15 @@ export default function WorkerRegister() {
             ) : null}
             {t('get_otp')}
           </button>
+          
+          <div className="text-center mt-4 pt-4 border-t border-gray-100">
+            <p className="text-xs text-gray-500 font-semibold">
+              Already have an account?{' '}
+              <Link href="/login" className="text-orange-600 font-black hover:underline">
+                Login Here
+              </Link>
+            </p>
+          </div>
         </form>
       </div>
     </div>
