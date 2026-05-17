@@ -1,0 +1,9 @@
+[
+  {
+    "email": "admin@kaammadat.com",
+    "password": "admin123",
+    "name": "Kaammadat Admin",
+    "mobile": "9999999999",
+    "type": "admin"
+  }
+]
