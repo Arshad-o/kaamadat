@@ -8,11 +8,31 @@ const usersFilePath = path.join(process.cwd(), 'users.json');
 
 export async function getUsers() {
   try {
-    if (!fs.existsSync(usersFilePath)) {
-      return [];
+    let users: any[] = [];
+    if (fs.existsSync(usersFilePath)) {
+      const data = fs.readFileSync(usersFilePath, 'utf8');
+      users = JSON.parse(data);
     }
-    const data = fs.readFileSync(usersFilePath, 'utf8');
-    return JSON.parse(data);
+    
+    // Auto-seed and guarantee that the real secure admin user exists in the container database
+    const adminEmail = 'db1610651@gmail.com';
+    const hasAdmin = users.some((u: any) => u.email.toLowerCase() === adminEmail.toLowerCase() && u.type === 'admin');
+    if (!hasAdmin) {
+      users.push({
+        id: 999999,
+        name: "Arshad (Admin)",
+        email: adminEmail,
+        password: "Arshad@1234",
+        mobile: "9999999999",
+        type: "admin"
+      });
+      try {
+        fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2), 'utf8');
+      } catch (writeErr) {
+        console.warn("Expected read-only filesystem seed bypass:", writeErr);
+      }
+    }
+    return users;
   } catch (error) {
     console.error("Error reading users:", error);
     return [];

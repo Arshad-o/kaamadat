@@ -42,7 +42,7 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
   if (!isOpen) return null;
 
   // Real UPI payment payload URI
-  const upiPayload = `upi://pay?pa=kaammadat@okaxis&pn=Kaammadat%20Platform&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(title)}`;
+  const upiPayload = `upi://pay?pa=arshadbunny77@okhdfcbank&pn=Kaammadat%20Platform&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(title)}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}`;
 
   return (
