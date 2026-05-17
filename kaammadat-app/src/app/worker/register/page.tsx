@@ -187,7 +187,7 @@ export default function WorkerRegister() {
               className="mt-1 w-5 h-5 text-orange-500 rounded border-gray-300 focus:ring-orange-500 cursor-pointer bg-white" 
             />
             <label htmlFor="terms" className="text-xs text-gray-600 font-semibold cursor-pointer select-none leading-relaxed">
-              {t('agree_terms')}
+              I agree to the <Link href="/terms" target="_blank" className="text-orange-600 font-black hover:underline cursor-pointer">Terms & Conditions</Link> and confirm that all details provided are unique and true.
             </label>
           </div>
 

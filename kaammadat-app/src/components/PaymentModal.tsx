@@ -151,43 +151,52 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
                     ℹ️ Clicking an app will automatically launch it on your mobile device to complete payment instantly!
                   </div>
 
-                  <button 
-                    onClick={() => handleAppPay('Google Pay')} 
-                    className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
-                  >
-                    <span className="font-extrabold text-gray-800 flex items-center gap-3">
-                      <div className="flex items-center gap-1 bg-white border border-gray-200 px-2.5 py-1 rounded-lg shadow-sm">
-                        <span className="text-[#4285F4] font-black text-sm">G</span>
-                        <span className="text-[#EA4335] font-black text-sm">P</span>
-                        <span className="text-[#FBBC05] font-black text-sm">a</span>
-                        <span className="text-[#34A853] font-black text-sm">y</span>
-                      </div>
-                      Google Pay (GPay)
-                    </span>
-                    <span className="text-xs text-blue-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
-                  </button>
-
+                  {/* 1. PhonePe (First) */}
                   <button 
                     onClick={() => handleAppPay('PhonePe')} 
                     className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-purple-500 hover:bg-purple-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
                   >
                     <span className="font-extrabold text-gray-800 flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#5f259f] flex items-center justify-center text-white font-black text-lg shadow-sm border border-purple-800">
-                        ₹
-                      </div>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src="/phonepe.jpg" 
+                        alt="PhonePe Logo" 
+                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm" 
+                      />
                       PhonePe
                     </span>
                     <span className="text-xs text-purple-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
                   </button>
 
+                  {/* 2. Google Pay (Second) */}
+                  <button 
+                    onClick={() => handleAppPay('Google Pay')} 
+                    className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
+                  >
+                    <span className="font-extrabold text-gray-800 flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src="/gpay.jpg" 
+                        alt="GPay Logo" 
+                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm" 
+                      />
+                      Google Pay (GPay)
+                    </span>
+                    <span className="text-xs text-blue-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
+                  </button>
+
+                  {/* 3. Paytm (Third) */}
                   <button 
                     onClick={() => handleAppPay('Paytm')} 
                     className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-cyan-500 hover:bg-cyan-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
                   >
                     <span className="font-extrabold text-gray-800 flex items-center gap-3">
-                      <div className="w-14 h-7 rounded-lg bg-[#00baf2] flex items-center justify-center text-white font-black text-[10px] shadow-sm border border-cyan-500 tracking-tighter">
-                        paytm
-                      </div>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src="/paytm.jpg" 
+                        alt="Paytm Logo" 
+                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm" 
+                      />
                       Paytm UPI
                     </span>
                     <span className="text-xs text-cyan-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>

@@ -186,9 +186,9 @@ export default function JobGiverRegister() {
               onChange={handleChange}
               className="mt-1 w-5 h-5 text-green-600 rounded border-gray-300 focus:ring-green-500 cursor-pointer bg-white" 
             />
-            <label htmlFor="terms" className="text-xs text-gray-600 font-semibold cursor-pointer select-none leading-relaxed">
-              {t('agree_terms')}
-            </label>
+             <label htmlFor="terms" className="text-xs text-gray-600 font-semibold cursor-pointer select-none leading-relaxed">
+               I agree to the <Link href="/terms" target="_blank" className="text-green-600 font-black hover:underline cursor-pointer">Terms & Conditions</Link> and confirm that all details provided are unique and true.
+             </label>
           </div>
 
           <button 
