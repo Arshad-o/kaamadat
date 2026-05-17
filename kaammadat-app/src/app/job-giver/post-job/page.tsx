@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { postJob } from '@/app/actions/jobActions';
+import { sendPaymentReceiptEmail } from '@/app/actions/emailActions';
 import PaymentModal from '@/components/PaymentModal';
 
 export default function PostJob() {
@@ -125,6 +126,17 @@ export default function PostJob() {
 
       const result = await postJob(formData);
       if (result.success) {
+        // Dispatch real-time payment receipt email
+        const userEmail = localStorage.getItem('kaammadat_user_email') || '';
+        const userName = localStorage.getItem('kaammadat_user_name') || 'Kaammadat Job Giver';
+        const userRole = localStorage.getItem('kaammadat_user_type') || 'job-giver';
+        if (userEmail) {
+          try {
+            await sendPaymentReceiptEmail(userEmail, finalFee, `Job Posting Fee - ${finalTitle}`, userRole, userName);
+          } catch (mailErr) {
+            console.error("Failed to trigger post job receipt email:", mailErr);
+          }
+        }
         setPosted(true);
         setTimeout(() => {
           window.location.href = '/worker/search';

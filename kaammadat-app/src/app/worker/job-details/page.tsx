@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import PaymentModal from '@/components/PaymentModal';
+import { sendPaymentReceiptEmail } from '@/app/actions/emailActions';
 
 export default function JobDetails() {
   const { t } = useLanguage();
@@ -185,8 +186,19 @@ export default function JobDetails() {
         amount={finalFee}
         title={`Kaammadat Job Application - ${job.title}`}
         onClose={() => setPaymentOpen(false)}
-        onSuccess={() => {
+        onSuccess={async () => {
           setPaymentOpen(false);
+          // Dispatch real-time payment receipt email
+          const userEmail = localStorage.getItem('kaammadat_user_email') || '';
+          const userName = localStorage.getItem('kaammadat_user_name') || 'Kaammadat Worker';
+          const userRole = localStorage.getItem('kaammadat_user_type') || 'worker';
+          if (userEmail) {
+            try {
+              await sendPaymentReceiptEmail(userEmail, finalFee, `Job Application Fee - ${job.title}`, userRole, userName);
+            } catch (mailErr) {
+              console.error("Failed to trigger worker receipt email:", mailErr);
+            }
+          }
           handleApply();
         }}
       />
