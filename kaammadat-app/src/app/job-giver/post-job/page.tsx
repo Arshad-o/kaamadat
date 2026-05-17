@@ -8,7 +8,7 @@ import PaymentModal from '@/components/PaymentModal';
 export default function PostJob() {
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const submitBtnRef = useRef<HTMLButtonElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   
   const [fee, setFee] = useState(30);
   const discount = 1.5; // Gold tier 5% discount mock
@@ -20,15 +20,41 @@ export default function PostJob() {
   const [locationText, setLocationText] = useState('');
   const [locating, setLocating] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const clientAction = async (formData: FormData) => {
-    const result = await postJob(formData);
-    if (result.success) {
-      setPosted(true);
-      setTimeout(() => {
-        window.location.href = '/worker/search'; // Redirect to worker search to immediately see the result
-      }, 2000);
-    }
+  // Upgraded Fields States for validation
+  const [title, setTitle] = useState('Electrician');
+  const [customTitle, setCustomTitle] = useState('');
+  const [capacity, setCapacity] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [salary, setSalary] = useState('');
+  const [accommodation, setAccommodation] = useState('Yes, Food & Room');
+
+  // Touched state tracker
+  const [touched, setTouched] = useState<{[key: string]: boolean}>({});
+
+  const handleBlur = (field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  // Validation Checkers
+  const isCustomTitleInvalid = title === 'Other' && touched.customTitle && !customTitle.trim();
+  const isCapacityInvalid = touched.capacity && (!capacity || parseInt(capacity) <= 0);
+  const isStartDateInvalid = touched.startDate && !startDate;
+  const isEndDateInvalid = touched.endDate && (!endDate || (startDate && new Date(endDate) < new Date(startDate)));
+  const isSalaryInvalid = touched.salary && (!salary || parseInt(salary) <= 0);
+  const isLocationInvalid = touched.location && (!locationText.trim() || locationText.length < 5);
+
+  const isFormValid = () => {
+    if (title === 'Other' && !customTitle.trim()) return false;
+    if (!capacity || parseInt(capacity) <= 0) return false;
+    if (!startDate) return false;
+    if (!endDate) return false;
+    if (startDate && endDate && new Date(endDate) < new Date(startDate)) return false;
+    if (!salary || parseInt(salary) <= 0) return false;
+    if (!locationText.trim() || locationText.length < 5) return false;
+    return true;
   };
 
   const handleGetLiveLocation = () => {
@@ -43,6 +69,8 @@ export default function PostJob() {
         setCoords({ lat: latitude, lng: longitude });
         setLocationText(`Worksite GPS Coordinates (Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)})`);
         setLocating(false);
+        // Automatically touch location
+        setTouched((prev) => ({ ...prev, location: true }));
       },
       (error) => {
         console.error(error);
@@ -73,8 +101,43 @@ export default function PostJob() {
   };
 
   const removeImage = (indexToRemove: number, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the click to upload
+    e.stopPropagation();
     setUploadedImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const executePostJob = async () => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      // Set title: use customTitle if Category is 'Other'
+      const finalTitle = title === 'Other' ? customTitle.trim() : title;
+      formData.append('title', finalTitle);
+      formData.append('capacity', capacity);
+      formData.append('startDate', startDate);
+      formData.append('endDate', endDate);
+      formData.append('salary', salary);
+      formData.append('accommodation', accommodation);
+      formData.append('location', locationText);
+      if (coords) {
+        formData.append('lat', coords.lat.toString());
+        formData.append('lng', coords.lng.toString());
+      }
+
+      const result = await postJob(formData);
+      if (result.success) {
+        setPosted(true);
+        setTimeout(() => {
+          window.location.href = '/worker/search';
+        }, 2000);
+      } else {
+        alert("Error posting job to Server. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to connect to Server. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (posted) {
@@ -99,54 +162,149 @@ export default function PostJob() {
           <Link href="/job-giver/dashboard" className="text-sm font-bold underline hover:text-orange-100">{t('cancel')}</Link>
         </div>
 
-        <form action={clientAction} className="p-6 md:p-8 flex flex-col gap-5">
+        <form ref={formRef} onSubmit={(e) => e.preventDefault()} className="p-6 md:p-8 flex flex-col gap-5">
+          
+          {/* Category selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Job Title / Category</label>
-              <select name="title" className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium">
+              <select 
+                name="title" 
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setTouched(prev => ({ ...prev, customTitle: false })); // Reset custom touched
+                }}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium"
+              >
                 <option value="Electrician">Electrician</option>
                 <option value="Carpenter">Carpenter</option>
-                <option value="Catering Boys">Catering Boys</option>
                 <option value="Bike Mechanic">Bike Mechanic</option>
-                <option value="Construction">Construction</option>
+                <option value="Catering Boys">Catering Boys</option>
+                <option value="Other">Other Category</option>
               </select>
             </div>
+            
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Capacity (Number of Workers)</label>
-              <input type="number" name="capacity" min="1" className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" placeholder="e.g. 10" required />
+              <label className={`block text-sm font-bold mb-1 ${isCapacityInvalid ? 'text-red-600' : 'text-gray-700'}`}>
+                Capacity (Number of Workers)
+              </label>
+              <input 
+                type="number" 
+                name="capacity" 
+                min="1" 
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+                onBlur={() => handleBlur('capacity')}
+                className={`w-full px-4 py-3 rounded-lg border text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium ${isCapacityInvalid ? 'border-red-500 bg-red-50 focus:ring-red-500 focus:border-red-500 animate-[shake_0.4s_ease]' : 'border-gray-300'}`}
+                placeholder="e.g. 10" 
+              />
+              {isCapacityInvalid && (
+                <p className="text-xs text-red-650 font-extrabold mt-1">⚠️ Capacity must be at least 1 worker.</p>
+              )}
             </div>
           </div>
 
+          {/* Dynamic Custom Work Field */}
+          {title === 'Other' && (
+            <div className="animate-[slide-down_0.3s_ease]">
+              <label className={`block text-sm font-bold mb-1 ${isCustomTitleInvalid ? 'text-red-600' : 'text-orange-700 font-extrabold'}`}>
+                ⚙️ Enter Custom Name of Work
+              </label>
+              <input 
+                type="text" 
+                name="customTitle"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                onBlur={() => handleBlur('customTitle')}
+                className={`w-full px-4 py-3 rounded-lg border text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-semibold ${isCustomTitleInvalid ? 'border-red-500 bg-red-50 focus:ring-red-500 focus:border-red-500 animate-[shake_0.4s_ease]' : 'border-orange-300 focus:ring-orange-500 focus:border-orange-500 bg-orange-50/10'}`}
+                placeholder="e.g. Plumber, Wall Painter, House Mason..." 
+              />
+              {isCustomTitleInvalid && (
+                <p className="text-xs text-red-650 font-extrabold mt-1">⚠️ Please manually enter a custom name for the work.</p>
+              )}
+            </div>
+          )}
+
+          {/* Date selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Start Date</label>
-              <input type="date" name="startDate" className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" required />
+              <label className={`block text-sm font-bold mb-1 ${isStartDateInvalid ? 'text-red-650' : 'text-gray-700'}`}>
+                Start Date
+              </label>
+              <input 
+                type="date" 
+                name="startDate" 
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                onBlur={() => handleBlur('startDate')}
+                className={`w-full px-4 py-3 rounded-lg border text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium ${isStartDateInvalid ? 'border-red-500 bg-red-50 focus:ring-red-500 focus:border-red-500 animate-[shake_0.4s_ease]' : 'border-gray-300'}`}
+              />
+              {isStartDateInvalid && (
+                <p className="text-xs text-red-600 font-extrabold mt-1">⚠️ Start date is required.</p>
+              )}
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">End Date</label>
-              <input type="date" name="endDate" className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" required />
+              <label className={`block text-sm font-bold mb-1 ${isEndDateInvalid ? 'text-red-650' : 'text-gray-700'}`}>
+                End Date
+              </label>
+              <input 
+                type="date" 
+                name="endDate" 
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                onBlur={() => handleBlur('endDate')}
+                className={`w-full px-4 py-3 rounded-lg border text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium ${isEndDateInvalid ? 'border-red-500 bg-red-50 focus:ring-red-500 focus:border-red-500 animate-[shake_0.4s_ease]' : 'border-gray-300'}`}
+              />
+              {isEndDateInvalid && (
+                <p className="text-xs text-red-600 font-extrabold mt-1">
+                  {!endDate ? '⚠️ End date is required.' : '⚠️ End date cannot be before start date.'}
+                </p>
+              )}
             </div>
           </div>
 
+          {/* Salary & Accommodation selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">{t('salary')} (₹)</label>
-              <input type="number" name="salary" className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" placeholder="e.g. 800" required />
+              <label className={`block text-sm font-bold mb-1 ${isSalaryInvalid ? 'text-red-650' : 'text-gray-700'}`}>
+                {t('salary')} (₹)
+              </label>
+              <input 
+                type="number" 
+                name="salary" 
+                value={salary}
+                onChange={(e) => setSalary(e.target.value)}
+                onBlur={() => handleBlur('salary')}
+                className={`w-full px-4 py-3 rounded-lg border text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium ${isSalaryInvalid ? 'border-red-500 bg-red-50 focus:ring-red-500 focus:border-red-500 animate-[shake_0.4s_ease]' : 'border-gray-300'}`}
+                placeholder="e.g. 800" 
+              />
+              {isSalaryInvalid && (
+                <p className="text-xs text-red-600 font-extrabold mt-1">⚠️ Daily wage salary must be greater than ₹0.</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Accommodation Provided?</label>
-              <select name="accommodation" className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium">
-                <option>Yes, Food & Room</option>
-                <option>Only Room</option>
-                <option>Only Food</option>
-                <option>No Accommodation</option>
+              <select 
+                name="accommodation" 
+                value={accommodation}
+                onChange={(e) => setAccommodation(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium"
+              >
+                <option value="Yes, Food & Room">Yes, Food & Room</option>
+                <option value="Only Room">Only Room</option>
+                <option value="Only Food">Only Food</option>
+                <option value="No Accommodation">No Accommodation</option>
               </select>
             </div>
           </div>
 
+          {/* Address location */}
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-bold text-gray-700">{t('address')} {t('location')}</label>
+              <label className={`block text-sm font-bold ${isLocationInvalid ? 'text-red-650' : 'text-gray-700'}`}>
+                {t('address')} {t('location')}
+              </label>
               <button 
                 type="button"
                 onClick={handleGetLiveLocation}
@@ -167,11 +325,14 @@ export default function PostJob() {
               name="location" 
               value={locationText}
               onChange={(e) => setLocationText(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
+              onBlur={() => handleBlur('location')}
+              className={`w-full px-4 py-3 rounded-lg border text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium ${isLocationInvalid ? 'border-red-500 bg-red-50 focus:ring-red-500 focus:border-red-500 animate-[shake_0.4s_ease]' : 'border-gray-300'}`} 
               rows={2} 
               placeholder="Enter full work map address or click live GPS above..." 
-              required
             ></textarea>
+            {isLocationInvalid && (
+              <p className="text-xs text-red-600 font-extrabold mt-1">⚠️ Full work site address (at least 5 letters) is required.</p>
+            )}
             {coords && (
               <>
                 <input type="hidden" name="lat" value={coords.lat} />
@@ -180,10 +341,10 @@ export default function PostJob() {
             )}
           </div>
 
+          {/* Upload Images */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">{t('upload_images')}</label>
             
-            {/* Dashed Area Triggering Hidden Input */}
             <div 
               onClick={handleUploadClick}
               className="border-2 border-dashed border-orange-300 rounded-xl p-8 flex flex-col items-center justify-center text-gray-500 bg-orange-50/30 cursor-pointer hover:bg-orange-50 transition border-spacing-2"
@@ -202,7 +363,6 @@ export default function PostJob() {
               />
             </div>
 
-            {/* Uploaded Image Previews */}
             {uploadedImages.length > 0 && (
               <div className="grid grid-cols-4 gap-4 mt-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
                 {uploadedImages.map((src, index) => (
@@ -227,7 +387,7 @@ export default function PostJob() {
             )}
           </div>
 
-          {/* Payment Section */}
+          {/* Payment breakdown */}
           <div className="mt-4 bg-yellow-50 p-5 rounded-2xl border border-yellow-200 shadow-sm">
              <h4 className="font-bold text-yellow-800 mb-3 text-base">Payment Breakdown</h4>
              <div className="flex justify-between text-sm mb-2 font-medium text-gray-600"><span>Base Posting Fee:</span><span>₹{fee.toFixed(2)}</span></div>
@@ -235,16 +395,31 @@ export default function PostJob() {
              <div className="flex justify-between font-black text-xl mt-3 pt-3 border-t border-yellow-300 text-yellow-900"><span>Total to Pay:</span><span>₹{finalFee.toFixed(2)}</span></div>
           </div>
 
+          {/* Validation Banner Indicator */}
+          {!isFormValid() && (
+            <div className="bg-orange-50 border border-orange-200 text-orange-850 p-4 rounded-xl text-xs font-bold my-1 text-left flex items-start gap-2.5 shadow-sm border-l-4 border-l-orange-500 animate-[pulse_3s_infinite]">
+              <span className="text-base">⚠️</span>
+              <div>
+                <p className="font-extrabold text-orange-950">Form details incomplete or incorrect</p>
+                <p className="mt-0.5 font-semibold text-orange-800/90 leading-relaxed">
+                  Please correct the highlighted inputs and fill out all fields to enable the secure payment button.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Payment Trigger Button */}
           <button 
             type="button" 
+            disabled={!isFormValid() || loading}
             onClick={() => setPaymentOpen(true)}
-            className="w-full mt-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-4 rounded-xl shadow-lg hover:from-green-700 hover:to-green-800 transition transform active:scale-95 text-lg cursor-pointer"
+            className="w-full mt-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-extrabold py-4 rounded-xl shadow-lg hover:from-green-700 hover:to-green-800 transition transform active:scale-95 text-lg cursor-pointer disabled:from-gray-300 disabled:to-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none flex items-center justify-center gap-2"
           >
+            {loading ? (
+              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            ) : null}
             Pay ₹{finalFee} & Post Job
           </button>
-
-          {/* Hidden actual submit button */}
-          <button type="submit" ref={submitBtnRef} className="hidden" />
         </form>
       </div>
 
@@ -254,10 +429,7 @@ export default function PostJob() {
         amount={finalFee}
         title="Kaammadat Job Posting Fee"
         onClose={() => setPaymentOpen(false)}
-        onSuccess={() => {
-          setPaymentOpen(false);
-          submitBtnRef.current?.click();
-        }}
+        onSuccess={executePostJob}
       />
     </div>
   );
