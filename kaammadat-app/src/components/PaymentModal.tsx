@@ -30,6 +30,10 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Real UPI payment payload URI
+  const upiPayload = `upi://pay?pa=arshadbunny77@okhdfcbank&pn=Kaammadat%20Platform&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(title)}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}`;
+
   const handleSimulateSuccess = () => {
     setProcessing(true);
     // Simulate webhook real-time confirmation delay
@@ -39,11 +43,21 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
     }, 1800);
   };
 
-  if (!isOpen) return null;
+  const handleAppPay = (appName: string) => {
+    // 1. Launch the native UPI deep link (Opens Google Pay/PhonePe/Paytm on mobile devices)
+    window.location.href = upiPayload;
 
-  // Real UPI payment payload URI
-  const upiPayload = `upi://pay?pa=arshadbunny77@okhdfcbank&pn=Kaammadat%20Platform&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(title)}`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}`;
+    // 2. Set checking / processing state to let the user know we are verifying
+    setProcessing(true);
+
+    // 3. Auto-simulate bank transaction confirmation when they return back (5 seconds)
+    setTimeout(() => {
+      setProcessing(false);
+      onSuccess();
+    }, 5500);
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-[fade-in_0.3s_ease-out] font-[family-name:var(--font-geist-sans)] p-4">
@@ -131,22 +145,50 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
               )}
 
               {paymentMethod === 'apps' && (
-                <div className="flex flex-col gap-3 w-full">
-                  <button onClick={handleSimulateSuccess} className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50/20 text-left flex items-center justify-between transition cursor-pointer group">
-                    <span className="font-extrabold text-gray-700 flex items-center gap-2">
-                      <span className="text-lg">📱</span> Google Pay (GPay)
+                <div className="flex flex-col gap-3.5 w-full">
+                  {/* Info Tip */}
+                  <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl text-center text-xs text-blue-700 font-semibold mb-1">
+                    ℹ️ Clicking an app will automatically launch it on your mobile device to complete payment instantly!
+                  </div>
+
+                  <button 
+                    onClick={() => handleAppPay('Google Pay')} 
+                    className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
+                  >
+                    <span className="font-extrabold text-gray-800 flex items-center gap-3">
+                      <div className="flex items-center gap-1 bg-white border border-gray-200 px-2.5 py-1 rounded-lg shadow-sm">
+                        <span className="text-[#4285F4] font-black text-sm">G</span>
+                        <span className="text-[#EA4335] font-black text-sm">P</span>
+                        <span className="text-[#FBBC05] font-black text-sm">a</span>
+                        <span className="text-[#34A853] font-black text-sm">y</span>
+                      </div>
+                      Google Pay (GPay)
                     </span>
                     <span className="text-xs text-blue-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
                   </button>
-                  <button onClick={handleSimulateSuccess} className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-purple-500 hover:bg-purple-50/20 text-left flex items-center justify-between transition cursor-pointer group">
-                    <span className="font-extrabold text-gray-700 flex items-center gap-2">
-                      <span className="text-lg">🟣</span> PhonePe
+
+                  <button 
+                    onClick={() => handleAppPay('PhonePe')} 
+                    className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-purple-500 hover:bg-purple-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
+                  >
+                    <span className="font-extrabold text-gray-800 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#5f259f] flex items-center justify-center text-white font-black text-lg shadow-sm border border-purple-800">
+                        ₹
+                      </div>
+                      PhonePe
                     </span>
                     <span className="text-xs text-purple-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
                   </button>
-                  <button onClick={handleSimulateSuccess} className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-cyan-500 hover:bg-cyan-50/20 text-left flex items-center justify-between transition cursor-pointer group">
-                    <span className="font-extrabold text-gray-700 flex items-center gap-2">
-                      <span className="text-lg">🪙</span> Paytm UPI
+
+                  <button 
+                    onClick={() => handleAppPay('Paytm')} 
+                    className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-cyan-500 hover:bg-cyan-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
+                  >
+                    <span className="font-extrabold text-gray-800 flex items-center gap-3">
+                      <div className="w-14 h-7 rounded-lg bg-[#00baf2] flex items-center justify-center text-white font-black text-[10px] shadow-sm border border-cyan-500 tracking-tighter">
+                        paytm
+                      </div>
+                      Paytm UPI
                     </span>
                     <span className="text-xs text-cyan-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
                   </button>
