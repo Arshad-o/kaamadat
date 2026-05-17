@@ -157,12 +157,14 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
                     className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-purple-500 hover:bg-purple-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
                   >
                     <span className="font-extrabold text-gray-800 flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img 
-                        src="/phonepe.jpg" 
-                        alt="PhonePe Logo" 
-                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm" 
-                      />
+                      <div className="w-10 h-10 rounded-full bg-black overflow-hidden flex items-center justify-center border border-gray-800 shadow-md">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src="/phonepe.jpg" 
+                          alt="PhonePe Logo" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
                       PhonePe
                     </span>
                     <span className="text-xs text-purple-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
@@ -174,12 +176,14 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
                     className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
                   >
                     <span className="font-extrabold text-gray-800 flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img 
-                        src="/gpay.jpg" 
-                        alt="GPay Logo" 
-                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm" 
-                      />
+                      <div className="w-10 h-10 rounded-full bg-black overflow-hidden flex items-center justify-center border border-gray-800 shadow-md">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src="/gpay.jpg" 
+                          alt="GPay Logo" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
                       Google Pay (GPay)
                     </span>
                     <span className="text-xs text-blue-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
@@ -191,12 +195,14 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
                     className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-cyan-500 hover:bg-cyan-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
                   >
                     <span className="font-extrabold text-gray-800 flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img 
-                        src="/paytm.jpg" 
-                        alt="Paytm Logo" 
-                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm" 
-                      />
+                      <div className="w-10 h-10 rounded-full bg-black overflow-hidden flex items-center justify-center border border-gray-800 shadow-md">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src="/paytm.jpg" 
+                          alt="Paytm Logo" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
                       Paytm UPI
                     </span>
                     <span className="text-xs text-cyan-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
