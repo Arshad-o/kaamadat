@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
-import { verifyOTP } from '@/app/actions/emailActions';
+import { verifyOTP, sendOTP } from '@/app/actions/emailActions';
 import { playNotificationSound } from '@/utils/playSound';
 
 export default function JobGiverOTP() {
@@ -15,6 +15,7 @@ export default function JobGiverOTP() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [simulatedOtp, setSimulatedOtp] = useState('');
+  const [resendTimer, setResendTimer] = useState(30);
 
   // References for automatic focus switching
   const inputRefs = [
@@ -30,6 +31,16 @@ export default function JobGiverOTP() {
     const savedSimulated = localStorage.getItem('kaammadat_simulated_otp') || '';
     setSimulatedOtp(savedSimulated);
   }, []);
+
+  // 30 seconds countdown for OTP resend
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [resendTimer]);
 
   const handleChange = (index: number, value: string) => {
     setError('');
@@ -93,6 +104,29 @@ export default function JobGiverOTP() {
     }
   };
 
+  const handleResend = async () => {
+    if (resendTimer > 0) return;
+    setLoading(true);
+    setError('');
+    try {
+      const result = await sendOTP(email);
+      if (result.success) {
+        setResendTimer(30);
+        if (result.simulated && result.otp) {
+          setSimulatedOtp(result.otp);
+          localStorage.setItem('kaammadat_simulated_otp', result.otp);
+        }
+        playNotificationSound();
+      } else {
+        setError(result.error || 'Failed to resend OTP.');
+      }
+    } catch (err) {
+      setError('Failed to resend OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 flex flex-col items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center border border-green-100 transition hover:shadow-green-200">
@@ -148,6 +182,23 @@ export default function JobGiverOTP() {
               ) : null}
               {t('verify_and_login')}
             </button>
+
+            {/* Resend OTP Section with 30 seconds timer */}
+            <div className="mt-6 text-center">
+              {resendTimer > 0 ? (
+                <p className="text-xs text-gray-500 font-semibold flex items-center justify-center gap-1.5 bg-gray-50 py-2.5 px-4 rounded-xl border border-gray-100 animate-[pulse_2s_infinite]">
+                  ⏳ Resend OTP code in <span className="text-green-700 font-black">{resendTimer}s</span>
+                </p>
+              ) : (
+                <button 
+                  onClick={handleResend}
+                  disabled={loading}
+                  className="text-xs font-black text-green-700 hover:text-green-800 bg-green-50 hover:bg-green-100/50 py-2.5 px-6 rounded-xl border border-green-100 transition cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  🔄 Resend OTP Code
+                </button>
+              )}
+            </div>
           </>
         ) : (
           <div className="flex flex-col items-center py-8">

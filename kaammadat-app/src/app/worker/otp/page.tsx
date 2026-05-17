@@ -182,6 +182,23 @@ export default function WorkerOTP() {
               ) : null}
               {t('verify_and_login')}
             </button>
+
+            {/* Resend OTP Section with 30 seconds timer */}
+            <div className="mt-6 text-center">
+              {resendTimer > 0 ? (
+                <p className="text-xs text-gray-500 font-semibold flex items-center justify-center gap-1.5 bg-gray-50 py-2.5 px-4 rounded-xl border border-gray-100 animate-[pulse_2s_infinite]">
+                  ⏳ Resend OTP code in <span className="text-orange-600 font-black">{resendTimer}s</span>
+                </p>
+              ) : (
+                <button 
+                  onClick={handleResend}
+                  disabled={loading}
+                  className="text-xs font-black text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100/50 py-2.5 px-6 rounded-xl border border-orange-100 transition cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  🔄 Resend OTP Code
+                </button>
+              )}
+            </div>
           </>
         ) : (
           <div className="flex flex-col items-center py-8">
