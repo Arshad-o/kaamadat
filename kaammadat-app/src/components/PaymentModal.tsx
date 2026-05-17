@@ -176,7 +176,7 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
                     className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
                   >
                     <span className="font-extrabold text-gray-800 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-black overflow-hidden flex items-center justify-center border border-gray-800 shadow-md">
+                      <div className="w-10 h-10 rounded-full bg-white overflow-hidden flex items-center justify-center border border-gray-200 shadow-sm">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                           src="/gpay.jpg" 
@@ -195,7 +195,7 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
                     className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-cyan-500 hover:bg-cyan-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
                   >
                     <span className="font-extrabold text-gray-800 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-black overflow-hidden flex items-center justify-center border border-gray-800 shadow-md">
+                      <div className="w-10 h-10 rounded-full bg-white overflow-hidden flex items-center justify-center border border-gray-200 shadow-sm">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                           src="/paytm.jpg" 
