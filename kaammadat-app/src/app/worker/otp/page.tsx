@@ -1,53 +1,145 @@
 "use client";
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
+import { verifyOTP } from '@/app/actions/emailActions';
 import { playNotificationSound } from '@/utils/playSound';
 
 export default function WorkerOTP() {
-  const [verified, setVerified] = useState(false);
+  const { t } = useLanguage();
+  const router = useRouter();
 
-  const handleVerify = () => {
-    playNotificationSound();
-    setVerified(true);
-    // Simulate redirect after animation
-    setTimeout(() => {
-      window.location.href = '/worker/dashboard';
-    }, 2000);
+  const [otp, setOtp] = useState<string[]>(['', '', '', '']);
+  const [email, setEmail] = useState('');
+  const [verified, setVerified] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // References for automatic focus switching
+  const inputRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+  ];
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('kaammadat_user_email') || 'your email';
+    setEmail(savedEmail);
+  }, []);
+
+  const handleChange = (index: number, value: string) => {
+    setError('');
+    if (isNaN(Number(value))) return; // only allow numbers
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Automatically focus next input box
+    if (value !== '' && index < 3) {
+      inputRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && otp[index] === '' && index > 0) {
+      // Focus previous input box on backspace
+      inputRefs[index - 1].current?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('text').trim();
+    if (pasteData.length === 4 && !isNaN(Number(pasteData))) {
+      const digits = pasteData.split('');
+      setOtp(digits);
+      inputRefs[3].current?.focus();
+    }
+  };
+
+  const handleVerify = async () => {
+    const fullOtp = otp.join('');
+    if (fullOtp.length !== 4) {
+      setError('Please enter a 4-digit OTP.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const result = await verifyOTP(fullOtp);
+      if (result.success) {
+        playNotificationSound();
+        setVerified(true);
+        setTimeout(() => {
+          router.push('/worker/dashboard');
+        }, 2000);
+      } else {
+        setError(result.error || 'Invalid OTP code. Please check and try again.');
+      }
+    } catch (err) {
+      setError('An error occurred during verification.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-orange-50 flex flex-col items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center border border-orange-100">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 flex flex-col items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center border border-orange-100 transition hover:shadow-orange-200">
         
         {!verified ? (
           <>
-            <h2 className="text-3xl font-bold text-gray-800">Verify OTP</h2>
-            <p className="text-gray-500 mt-2 mb-6">Enter the OTP sent to kaammadat@gmail.com</p>
+            <h2 className="text-3xl font-extrabold text-gray-800 tracking-tight">{t('verify_otp')}</h2>
+            <p className="text-gray-600 mt-3 mb-6 text-sm font-medium">
+              {t('enter_otp_sent_to')} <span className="text-orange-600 font-bold block mt-1 text-base">{email}</span> {t('through')} <span className="text-blue-600 font-bold">kaammadat@gmail.com</span>
+            </p>
             
-            <div className="flex justify-center gap-3 mb-8">
-              {[1, 2, 3, 4].map((i) => (
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200 font-bold mb-5 animate-[shake_0.5s_ease-in-out]">
+                ⚠️ {error}
+              </div>
+            )}
+
+            <div className="flex justify-center gap-4 mb-8">
+              {otp.map((digit, i) => (
                 <input 
                   key={i} 
+                  ref={inputRefs[i]}
                   type="text" 
                   maxLength={1} 
-                  className="w-14 h-14 text-center text-2xl font-bold rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none" 
+                  value={digit}
+                  onChange={(e) => handleChange(i, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(i, e)}
+                  onPaste={handlePaste}
+                  className="w-14 h-14 text-center text-3xl font-extrabold rounded-xl border-2 border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition" 
                 />
               ))}
             </div>
 
-            <button onClick={handleVerify} className="w-full bg-orange-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-orange-600 transition">
-              Verify & Login
+            <button 
+              onClick={handleVerify} 
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-extrabold py-4 rounded-xl shadow-lg hover:from-orange-600 hover:to-orange-700 transition transform active:scale-95 disabled:bg-gray-400 flex items-center justify-center gap-2 cursor-pointer text-base"
+            >
+              {loading ? (
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              ) : null}
+              {t('verify_and_login')}
             </button>
           </>
         ) : (
           <div className="flex flex-col items-center py-8">
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center animate-[bounce_1s_ease-in-out]">
+            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center animate-[bounce_1s_ease-in-out] shadow-inner">
               <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
               </svg>
             </div>
-            <h3 className="text-2xl font-bold text-green-600 mt-4">Login Successful!</h3>
-            <p className="text-gray-500 mt-2">Redirecting to your dashboard...</p>
+            <h3 className="text-2xl font-black text-green-600 mt-5">{t('login_success')}</h3>
+            <p className="text-gray-500 mt-2 font-medium">{t('redirecting')}</p>
           </div>
         )}
       </div>

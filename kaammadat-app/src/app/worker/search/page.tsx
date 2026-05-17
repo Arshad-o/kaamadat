@@ -61,7 +61,10 @@ export default function JobSearch() {
                     </span>
                     {!isFull ? (
                        <Link href="/worker/job-details">
-                         <button className="bg-orange-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-orange-600">
+                         <button 
+                           onClick={() => localStorage.setItem('kaammadat_selected_job', JSON.stringify(job))}
+                           className="bg-orange-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-orange-600 cursor-pointer"
+                         >
                            View & Apply
                          </button>
                        </Link>
