@@ -5,6 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import PaymentModal from '@/components/PaymentModal';
 import { sendPaymentReceiptEmail } from '@/app/actions/emailActions';
 import { playNotificationSound } from '@/utils/playSound';
+import { saveFraudReport } from '@/app/actions/fraudActions';
 
 export default function JobDetails() {
   const { t } = useLanguage();
@@ -59,8 +60,20 @@ export default function JobDetails() {
     }, 3000);
   };
 
-  const handleFraud = () => {
+  const handleFraud = async () => {
     setFraudReported(true);
+    const workerName = localStorage.getItem('kaammadat_user_name') || 'Unknown Worker';
+    const workerEmail = localStorage.getItem('kaammadat_user_email') || '';
+    try {
+      await saveFraudReport({
+        workerName,
+        workerEmail,
+        jobTitle: job.title,
+        reason: 'Reported by worker: Suspected fraud / fake job posting.',
+      });
+    } catch (e) {
+      console.error('Failed to save fraud report:', e);
+    }
   };
 
   if (applied) {

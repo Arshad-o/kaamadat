@@ -194,3 +194,74 @@ export async function resetPassword(email: string, enteredOtp: string, newPasswo
     return { success: false, error: error.message };
   }
 }
+
+// ── Admin Actions ──────────────────────────────────────────────────────────────
+
+export async function adminGetAllUsers() {
+  try {
+    const users = await getUsers();
+    return users.filter((u: any) => u.type !== 'admin');
+  } catch (error: any) {
+    console.error("Error fetching users for admin:", error);
+    return [];
+  }
+}
+
+export async function adminSearchUsers(query: string) {
+  try {
+    const users = await getUsers();
+    const q = query.trim().toLowerCase();
+    return users.filter((u: any) =>
+      u.type !== 'admin' &&
+      (
+        (u.mobile && u.mobile.includes(q)) ||
+        (u.aadhar && u.aadhar.includes(q))
+      )
+    );
+  } catch (error: any) {
+    console.error("Error searching users:", error);
+    return [];
+  }
+}
+
+export async function adminWarnUser(email: string) {
+  try {
+    const users = await getUsers();
+    const idx = users.findIndex((u: any) => u.email.toLowerCase() === email.toLowerCase());
+    if (idx === -1) return { success: false, error: 'User not found.' };
+    users[idx].warned = true;
+    users[idx].warnedAt = new Date().toISOString();
+    await saveUsers(users);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error warning user:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function adminRemoveUser(email: string) {
+  try {
+    const users = await getUsers();
+    const filtered = users.filter((u: any) => u.email.toLowerCase() !== email.toLowerCase());
+    if (filtered.length === users.length) return { success: false, error: 'User not found.' };
+    await saveUsers(filtered);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error removing user:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function adminSetCard(email: string, tier: string) {
+  try {
+    const users = await getUsers();
+    const idx = users.findIndex((u: any) => u.email.toLowerCase() === email.toLowerCase());
+    if (idx === -1) return { success: false, error: 'User not found.' };
+    users[idx].cardOverride = tier;
+    await saveUsers(users);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error setting card tier:", error);
+    return { success: false, error: error.message };
+  }
+}
