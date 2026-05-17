@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import LogoutModal from '@/components/LogoutModal';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
   const [reports, setReports] = useState([
     { id: 1, type: 'Fraud', worker: 'Rahul Kumar (ID: 1029)', giver: 'Anand Sharma (ID: 8821)', job: 'Electrician (Wiring)', reason: 'Not paying promised salary', status: 'Pending' },
     { id: 2, type: 'Skill Issue', worker: 'Amit Patel (ID: 3341)', giver: 'BuildIt Co (ID: 9912)', job: 'House Construction', reason: 'Worker lacks basic carpentry skills', status: 'Pending' }
@@ -19,6 +21,15 @@ export default function AdminDashboard() {
       setAuthorized(true);
     }
   }, [router]);
+
+  const executeLogout = () => {
+    localStorage.clear();
+    // Delete authentication cookies as well
+    document.cookie = "kaammadat_authenticated=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    document.cookie = "kaammadat_user_type=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    document.cookie = "kaammadat_user_email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    window.location.href = '/';
+  };
 
   const handleEvaporate = (id: number) => {
     setReports(reports.map(r => r.id === id ? { ...r, status: 'EVAPORATED (Banned)' } : r));
@@ -35,9 +46,14 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-100 font-[family-name:var(--font-geist-sans)] p-4 md:p-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Kaammadat Admin Control</h1>
-        <p className="text-slate-500">Monitoring 1.7 Billion Users</p>
+      <header className="mb-8 flex justify-between items-center bg-slate-900 text-white p-6 rounded-2xl shadow-lg border border-slate-800">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-green-500">Kaammadat Admin Control</h1>
+          <p className="text-slate-400 font-semibold text-xs mt-1 uppercase tracking-widest">Authorized Security Panel</p>
+        </div>
+        <button onClick={() => setShowLogout(true)} className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-extrabold rounded-xl shadow-md transition transform active:scale-95 text-sm cursor-pointer">
+          Logout 🚪
+        </button>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -94,6 +110,13 @@ export default function AdminDashboard() {
           ))}
         </div>
       </div>
+
+      {/* Reusable Premium Logout Modal Confirmation */}
+      <LogoutModal 
+        isOpen={showLogout}
+        onClose={() => setShowLogout(false)}
+        onConfirm={executeLogout}
+      />
     </div>
   );
 }

@@ -64,10 +64,27 @@ export async function registerUser(formData: FormData) {
     }
 
     const users = await getUsers();
-    const existing = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
+    
+    // 1. Email check
+    const existingEmail = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
+    if (existingEmail) {
+      return { success: false, error: `Credential Error: This Email ID (${email}) is already registered by another user.` };
+    }
 
-    if (existing) {
-      return { success: false, error: 'An account with this email already exists.' };
+    // 2. Mobile check
+    if (mobile) {
+      const existingMobile = users.find((u: any) => u.mobile === mobile);
+      if (existingMobile) {
+        return { success: false, error: `Credential Error: This Mobile Number (${mobile}) is already registered by another user.` };
+      }
+    }
+
+    // 3. Aadhar check
+    if (aadhar) {
+      const existingAadhar = users.find((u: any) => u.aadhar === aadhar);
+      if (existingAadhar) {
+        return { success: false, error: `Credential Error: This Aadhar Card Number (${aadhar}) is already registered by another user.` };
+      }
     }
 
     // Add new user

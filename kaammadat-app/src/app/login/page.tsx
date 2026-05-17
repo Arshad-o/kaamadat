@@ -29,12 +29,14 @@ export default function UniversalLogin() {
           localStorage.setItem('kaammadat_user_name', result.user.name);
           localStorage.setItem('kaammadat_user_mobile', result.user.mobile);
           localStorage.setItem('kaammadat_user_type', 'worker');
+          localStorage.setItem('kaammadat_user_logged_in', 'true');
           router.push('/worker/search');
         } else if (role === 'job-giver') {
           localStorage.setItem('kaammadat_user_email', result.user.email);
           localStorage.setItem('kaammadat_user_name', result.user.name);
           localStorage.setItem('kaammadat_user_mobile', result.user.mobile);
           localStorage.setItem('kaammadat_user_type', 'job-giver');
+          localStorage.setItem('kaammadat_user_logged_in', 'true');
           router.push('/job-giver/dashboard');
         }
       } else {

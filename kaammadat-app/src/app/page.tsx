@@ -7,6 +7,21 @@ export default function Home() {
   const { language, setLanguage, t } = useLanguage();
   const [showSplash, setShowSplash] = useState(true);
 
+  // Persistent session auto-login redirect
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('kaammadat_user_logged_in') === 'true';
+    const userType = localStorage.getItem('kaammadat_user_type');
+    if (isLoggedIn && userType) {
+      if (userType === 'worker') {
+        window.location.href = '/worker/dashboard';
+      } else if (userType === 'job-giver') {
+        window.location.href = '/job-giver/dashboard';
+      } else if (userType === 'admin') {
+        window.location.href = '/admin/dashboard';
+      }
+    }
+  }, []);
+
   // Splash screen timeout
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
-import { verifyOTP } from '@/app/actions/emailActions';
+import { verifyOTP, sendOTP } from '@/app/actions/emailActions';
 import { playNotificationSound } from '@/utils/playSound';
 
 export default function WorkerOTP() {
@@ -15,6 +15,7 @@ export default function WorkerOTP() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [simulatedOtp, setSimulatedOtp] = useState('');
+  const [resendTimer, setResendTimer] = useState(30);
 
   // References for automatic focus switching
   const inputRefs = [
@@ -30,6 +31,16 @@ export default function WorkerOTP() {
     const savedSimulated = localStorage.getItem('kaammadat_simulated_otp') || '';
     setSimulatedOtp(savedSimulated);
   }, []);
+
+  // 30 seconds countdown for OTP resend
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [resendTimer]);
 
   const handleChange = (index: number, value: string) => {
     setError('');
@@ -77,6 +88,9 @@ export default function WorkerOTP() {
       if (result.success) {
         playNotificationSound();
         setVerified(true);
+        // Save persistent login session
+        localStorage.setItem('kaammadat_user_logged_in', 'true');
+        localStorage.setItem('kaammadat_user_type', 'worker');
         setTimeout(() => {
           router.push('/worker/dashboard');
         }, 2000);
@@ -85,6 +99,29 @@ export default function WorkerOTP() {
       }
     } catch (err) {
       setError('An error occurred during verification.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendTimer > 0) return;
+    setLoading(true);
+    setError('');
+    try {
+      const result = await sendOTP(email);
+      if (result.success) {
+        setResendTimer(30);
+        if (result.simulated && result.otp) {
+          setSimulatedOtp(result.otp);
+          localStorage.setItem('kaammadat_simulated_otp', result.otp);
+        }
+        playNotificationSound();
+      } else {
+        setError(result.error || 'Failed to resend OTP.');
+      }
+    } catch (err) {
+      setError('Failed to resend OTP.');
     } finally {
       setLoading(false);
     }

@@ -77,6 +77,9 @@ export default function JobGiverOTP() {
       if (result.success) {
         playNotificationSound();
         setVerified(true);
+        // Save persistent login session
+        localStorage.setItem('kaammadat_user_logged_in', 'true');
+        localStorage.setItem('kaammadat_user_type', 'job-giver');
         setTimeout(() => {
           router.push('/job-giver/dashboard');
         }, 2000);

@@ -21,6 +21,10 @@ export default function AdminLogin() {
       const result = await loginUser(email, password, 'admin');
       if (result.success) {
         playNotificationSound();
+        localStorage.setItem('kaammadat_user_logged_in', 'true');
+        localStorage.setItem('kaammadat_user_type', 'admin');
+        localStorage.setItem('kaammadat_user_email', email);
+        localStorage.setItem('kaammadat_user_name', 'Arshad (Admin)');
         router.push('/admin/dashboard');
       } else {
         setError(result.error || 'Authentication failed. Please check credentials.');

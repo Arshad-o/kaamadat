@@ -3,11 +3,13 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { getJobs } from '@/app/actions/jobActions';
+import LogoutModal from '@/components/LogoutModal';
 
 export default function JobGiverDashboard() {
   const { t } = useLanguage();
   const [giverName, setGiverName] = useState('Anand Sharma');
   const [jobs, setJobs] = useState<any[]>([]);
+  const [showLogout, setShowLogout] = useState(false);
 
   useEffect(() => {
     const savedName = localStorage.getItem('kaammadat_user_name');
@@ -20,8 +22,12 @@ export default function JobGiverDashboard() {
     });
   }, []);
 
-  const handleLogout = () => {
+  const executeLogout = () => {
     localStorage.clear();
+    // Delete authentication cookies as well
+    document.cookie = "kaammadat_authenticated=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    document.cookie = "kaammadat_user_type=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    document.cookie = "kaammadat_user_email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     window.location.href = '/';
   };
 
@@ -35,7 +41,7 @@ export default function JobGiverDashboard() {
           </div>
           <h1 className="font-bold text-xl">Hi, {giverName}</h1>
         </div>
-        <button onClick={handleLogout} className="text-sm font-bold bg-green-700 hover:bg-green-800 px-4 py-2 rounded-full shadow transition cursor-pointer">
+        <button onClick={() => setShowLogout(true)} className="text-sm font-bold bg-green-700 hover:bg-green-800 px-4 py-2 rounded-full shadow transition cursor-pointer">
           Logout
         </button>
       </header>
@@ -121,6 +127,13 @@ export default function JobGiverDashboard() {
         </section>
 
       </main>
+
+      {/* Reusable Premium Logout Modal Confirmation */}
+      <LogoutModal 
+        isOpen={showLogout}
+        onClose={() => setShowLogout(false)}
+        onConfirm={executeLogout}
+      />
     </div>
   );
 }

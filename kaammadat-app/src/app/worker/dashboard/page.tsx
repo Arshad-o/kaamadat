@@ -2,18 +2,24 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
+import LogoutModal from '@/components/LogoutModal';
 
 export default function WorkerDashboard() {
   const { t } = useLanguage();
   const [workerName, setWorkerName] = useState('Rahul Kumar');
+  const [showLogout, setShowLogout] = useState(false);
 
   useEffect(() => {
     const savedName = localStorage.getItem('kaammadat_user_name');
     if (savedName) setWorkerName(savedName);
   }, []);
 
-  const handleLogout = () => {
+  const executeLogout = () => {
     localStorage.clear();
+    // Delete authentication cookies as well
+    document.cookie = "kaammadat_authenticated=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    document.cookie = "kaammadat_user_type=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    document.cookie = "kaammadat_user_email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     window.location.href = '/';
   };
 
@@ -28,7 +34,7 @@ export default function WorkerDashboard() {
           </div>
           <h1 className="font-bold text-xl">Hi, {workerName}</h1>
         </Link>
-        <button onClick={handleLogout} className="text-sm font-bold bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-full shadow transition cursor-pointer">
+        <button onClick={() => setShowLogout(true)} className="text-sm font-bold bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-full shadow transition cursor-pointer">
           Logout
         </button>
       </header>
@@ -92,6 +98,13 @@ export default function WorkerDashboard() {
         </section>
 
       </main>
+
+      {/* Reusable Premium Logout Modal Confirmation */}
+      <LogoutModal 
+        isOpen={showLogout}
+        onClose={() => setShowLogout(false)}
+        onConfirm={executeLogout}
+      />
     </div>
   );
 }
