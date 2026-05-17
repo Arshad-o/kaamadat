@@ -8,10 +8,13 @@ export default function WorkerDashboard() {
   const { t } = useLanguage();
   const [workerName, setWorkerName] = useState('Rahul Kumar');
   const [showLogout, setShowLogout] = useState(false);
+  const [workPhotos, setWorkPhotos] = useState<any[]>([]);
 
   useEffect(() => {
     const savedName = localStorage.getItem('kaammadat_user_name');
     if (savedName) setWorkerName(savedName);
+    const savedPhotos = localStorage.getItem('kaammadat_work_photos');
+    if (savedPhotos) setWorkPhotos(JSON.parse(savedPhotos));
   }, []);
 
   const executeLogout = () => {
@@ -84,6 +87,35 @@ export default function WorkerDashboard() {
                 </div>
              </div>
           </div>
+        </section>
+
+        {/* Work Portfolio Preview */}
+        <section className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-black text-gray-800">📸 My Work Portfolio</h3>
+            <Link href="/worker/profile" className="text-orange-500 text-xs font-extrabold hover:underline">
+              {workPhotos.length > 0 ? `View All (${workPhotos.length})` : '+ Add Photos'}
+            </Link>
+          </div>
+          {workPhotos.length === 0 ? (
+            <Link href="/worker/profile">
+              <div className="border-2 border-dashed border-orange-200 rounded-xl p-6 text-center cursor-pointer hover:bg-orange-50 transition">
+                <p className="text-3xl mb-2">📷</p>
+                <p className="text-gray-500 font-bold text-sm">No work photos yet</p>
+                <p className="text-xs text-orange-500 font-semibold mt-1">Tap to upload your first work photo →</p>
+              </div>
+            </Link>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              {workPhotos.slice(0, 6).map((photo: any) => (
+                <Link key={photo.id} href="/worker/profile">
+                  <div className="h-24 rounded-xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer hover:opacity-90 transition">
+                    <img src={photo.dataUrl} alt={photo.desc} className="w-full h-full object-cover" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Job Search Area */}

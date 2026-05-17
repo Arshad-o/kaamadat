@@ -35,16 +35,17 @@ export default function JobGiverDashboard() {
     <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-geist-sans)] animate-[fade-in_0.6s_ease-in-out]">
       {/* Header */}
       <header className="bg-green-600 text-white p-4 shadow-md flex justify-between items-center">
-        <div className="flex items-center gap-3">
+        <Link href="/job-giver/profile" className="flex items-center gap-3 hover:opacity-90 transition cursor-pointer">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 font-extrabold shadow border border-green-200">
              {giverName.charAt(0)}
           </div>
           <h1 className="font-bold text-xl">Hi, {giverName}</h1>
-        </div>
+        </Link>
         <button onClick={() => setShowLogout(true)} className="text-sm font-bold bg-green-700 hover:bg-green-800 px-4 py-2 rounded-full shadow transition cursor-pointer">
           Logout
         </button>
       </header>
+
 
       <main className="p-4 max-w-4xl mx-auto flex flex-col gap-6 mt-6">
         

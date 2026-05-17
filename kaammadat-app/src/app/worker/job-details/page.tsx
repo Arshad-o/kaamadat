@@ -54,6 +54,26 @@ export default function JobDetails() {
   const handleApply = () => {
     setApplied(true);
     playNotificationSound();
+    // Save this worker as an applicant so job giver can see them
+    const workerName = localStorage.getItem('kaammadat_user_name') || 'Unknown Worker';
+    const workerEmail = localStorage.getItem('kaammadat_user_email') || '';
+    const workerPhotosRaw = localStorage.getItem('kaammadat_work_photos');
+    const workerPhotos = workerPhotosRaw ? JSON.parse(workerPhotosRaw) : [];
+    const applicationsRaw = localStorage.getItem('kaammadat_applications');
+    const applications = applicationsRaw ? JSON.parse(applicationsRaw) : [];
+    // Avoid duplicate applications for same job
+    const alreadyApplied = applications.some((a: any) => a.jobId === job.id && a.workerEmail === workerEmail);
+    if (!alreadyApplied) {
+      applications.push({
+        jobId: job.id,
+        jobTitle: job.title,
+        workerName,
+        workerEmail,
+        workerPhotos: workerPhotos.slice(0, 6), // send up to 6 photos
+        appliedAt: new Date().toISOString(),
+      });
+      localStorage.setItem('kaammadat_applications', JSON.stringify(applications));
+    }
     // Simulate redirect back to dashboard after payment
     setTimeout(() => {
       window.location.href = '/worker/dashboard';
