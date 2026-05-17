@@ -39,7 +39,6 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
     setProcessing(true);
     // Simulate webhook real-time confirmation delay
     setTimeout(() => {
-      playNotificationSound();
       setProcessing(false);
       onSuccess();
     }, 1800);
@@ -54,7 +53,6 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
 
     // 3. Auto-simulate bank transaction confirmation when they return back (5 seconds)
     setTimeout(() => {
-      playNotificationSound();
       setProcessing(false);
       onSuccess();
     }, 5500);

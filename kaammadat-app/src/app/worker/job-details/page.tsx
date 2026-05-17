@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import PaymentModal from '@/components/PaymentModal';
 import { sendPaymentReceiptEmail } from '@/app/actions/emailActions';
+import { playNotificationSound } from '@/utils/playSound';
 
 export default function JobDetails() {
   const { t } = useLanguage();
@@ -51,6 +52,7 @@ export default function JobDetails() {
 
   const handleApply = () => {
     setApplied(true);
+    playNotificationSound();
     // Simulate redirect back to dashboard after payment
     setTimeout(() => {
       window.location.href = '/worker/dashboard';

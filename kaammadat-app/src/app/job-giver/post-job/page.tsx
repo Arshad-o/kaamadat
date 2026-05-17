@@ -5,6 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { postJob } from '@/app/actions/jobActions';
 import { sendPaymentReceiptEmail } from '@/app/actions/emailActions';
 import PaymentModal from '@/components/PaymentModal';
+import { playNotificationSound } from '@/utils/playSound';
 
 export default function PostJob() {
   const { t } = useLanguage();
@@ -138,6 +139,7 @@ export default function PostJob() {
           }
         }
         setPosted(true);
+        playNotificationSound();
         setTimeout(() => {
           window.location.href = '/worker/search';
         }, 2000);
