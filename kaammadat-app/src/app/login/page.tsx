@@ -8,7 +8,7 @@ import { playNotificationSound } from '@/utils/playSound';
 export default function UniversalLogin() {
   const router = useRouter();
   const [role, setRole] = useState<'worker' | 'job-giver'>('worker');
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,28 +19,31 @@ export default function UniversalLogin() {
     setLoading(true);
 
     try {
-      const result = await loginUser(email, password, role);
+      const result = await loginUser(identifier, password, role) as any;
       if (result.success && result.user) {
         playNotificationSound();
-        // Redirect based on role
+        
+        // Save mock user context in localStorage for UI consistencies and OTP verification
+        localStorage.setItem('kaammadat_user_email', result.user.email);
+        localStorage.setItem('kaammadat_user_name', result.user.name);
+        localStorage.setItem('kaammadat_user_mobile', result.user.mobile);
+        localStorage.setItem('kaammadat_user_type', role);
+
+        // Check if there's a simulated OTP from the backend
+        if (result.otpResult?.simulated && result.otpResult?.otp) {
+          localStorage.setItem('kaammadat_simulated_otp', result.otpResult.otp);
+        } else {
+          localStorage.removeItem('kaammadat_simulated_otp');
+        }
+
+        // Redirect to OTP verification page based on role
         if (role === 'worker') {
-          // Save mock user context in localStorage for UI consistencies
-          localStorage.setItem('kaammadat_user_email', result.user.email);
-          localStorage.setItem('kaammadat_user_name', result.user.name);
-          localStorage.setItem('kaammadat_user_mobile', result.user.mobile);
-          localStorage.setItem('kaammadat_user_type', 'worker');
-          localStorage.setItem('kaammadat_user_logged_in', 'true');
-          router.push('/worker/search');
+          router.push('/worker/otp');
         } else if (role === 'job-giver') {
-          localStorage.setItem('kaammadat_user_email', result.user.email);
-          localStorage.setItem('kaammadat_user_name', result.user.name);
-          localStorage.setItem('kaammadat_user_mobile', result.user.mobile);
-          localStorage.setItem('kaammadat_user_type', 'job-giver');
-          localStorage.setItem('kaammadat_user_logged_in', 'true');
-          router.push('/job-giver/dashboard');
+          router.push('/job-giver/otp');
         }
       } else {
-        setError(result.error || 'Invalid credentials. Please verify your email and password.');
+        setError(result.error || 'Invalid credentials. Please verify your details.');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
@@ -52,27 +55,32 @@ export default function UniversalLogin() {
   const activeColor = role === 'worker' ? 'orange' : 'green';
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 font-[family-name:var(--font-geist-sans)] transition-colors duration-500 ${role === 'worker' ? 'bg-orange-50' : 'bg-green-50'}`}>
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 transition hover:shadow-orange-100/50">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 font-[family-name:var(--font-geist-sans)] relative overflow-hidden bg-slate-50">
+      
+      {/* Dynamic Animated Mesh Gradients based on Role */}
+      <div className={`absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply filter blur-[120px] opacity-70 animate-[pulse_8s_infinite] transition-colors duration-1000 ${role === 'worker' ? 'bg-orange-300' : 'bg-green-300'}`}></div>
+      <div className={`absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply filter blur-[120px] opacity-70 animate-[pulse_8s_infinite_reverse] transition-colors duration-1000 ${role === 'worker' ? 'bg-red-200' : 'bg-teal-200'}`}></div>
+
+      <div className="w-full max-w-md bg-white/60 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 overflow-hidden relative z-10 transition-all duration-500 hover:shadow-[0_8px_40px_rgb(0,0,0,0.12)]">
         
         {/* Toggle Header */}
-        <div className="flex border-b border-gray-100 bg-gray-50">
+        <div className="flex bg-white/40 backdrop-blur-md border-b border-white/50">
           <button
             onClick={() => { setRole('worker'); setError(''); }}
-            className={`flex-1 py-4 text-center font-bold text-sm transition-all ${
+            className={`flex-1 py-4 text-center font-extrabold text-sm transition-all duration-300 ${
               role === 'worker' 
-                ? 'bg-white text-orange-600 border-b-2 border-orange-500' 
-                : 'text-gray-500 hover:text-orange-500 hover:bg-orange-50/20'
+                ? 'bg-white/90 text-orange-600 shadow-[inset_0_-3px_0_0_#f97316]' 
+                : 'text-slate-500 hover:text-orange-500 hover:bg-white/50'
             }`}
           >
             👷 I am a Worker
           </button>
           <button
             onClick={() => { setRole('job-giver'); setError(''); }}
-            className={`flex-1 py-4 text-center font-bold text-sm transition-all ${
+            className={`flex-1 py-4 text-center font-extrabold text-sm transition-all duration-300 ${
               role === 'job-giver' 
-                ? 'bg-white text-green-700 border-b-2 border-green-600' 
-                : 'text-gray-500 hover:text-green-600 hover:bg-green-50/20'
+                ? 'bg-white/90 text-green-700 shadow-[inset_0_-3px_0_0_#16a34a]' 
+                : 'text-slate-500 hover:text-green-600 hover:bg-white/50'
             }`}
           >
             💼 I am a Job Giver
@@ -80,11 +88,11 @@ export default function UniversalLogin() {
         </div>
 
         <div className="p-8">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-black text-gray-800 tracking-tight">
-              Sign In to Kaammadat
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-black text-slate-800 tracking-tight drop-shadow-sm">
+              Sign In
             </h2>
-            <p className="text-gray-500 text-xs mt-1">Connecting the workforce of India</p>
+            <p className="text-slate-500 text-sm mt-2 font-medium">Connecting the workforce of India</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -95,26 +103,26 @@ export default function UniversalLogin() {
             )}
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Email ID</label>
+              <label className="block text-sm font-extrabold text-slate-700 mb-1.5">Email ID or Mobile Number</label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 outline-none transition font-medium ${
-                  role === 'worker' ? 'focus:ring-orange-500 focus:border-orange-500' : 'focus:ring-green-500 focus:border-green-500'
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                className={`w-full px-4 py-3.5 rounded-xl border border-white/60 text-slate-900 bg-white/50 backdrop-blur-sm focus:bg-white focus:ring-4 outline-none transition-all font-semibold shadow-sm ${
+                  role === 'worker' ? 'focus:ring-orange-500/20 focus:border-orange-500' : 'focus:ring-green-500/20 focus:border-green-500'
                 }`}
-                placeholder="e.g. rahul@example.com"
+                placeholder="e.g. rahul@example.com or 9876543210"
                 required
               />
             </div>
 
             <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="block text-sm font-bold text-gray-700">Password</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-sm font-extrabold text-slate-700">Password</label>
                 <Link 
                   href={`/forgot-password?role=${role}`} 
-                  className={`text-xs font-bold transition hover:underline ${
-                    role === 'worker' ? 'text-orange-600' : 'text-green-700'
+                  className={`text-xs font-black transition-colors hover:underline ${
+                    role === 'worker' ? 'text-orange-600 hover:text-orange-700' : 'text-green-700 hover:text-green-800'
                   }`}
                 >
                   Forgot Password?
@@ -124,8 +132,8 @@ export default function UniversalLogin() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 outline-none transition font-medium ${
-                  role === 'worker' ? 'focus:ring-orange-500 focus:border-orange-500' : 'focus:ring-green-500 focus:border-green-500'
+                className={`w-full px-4 py-3.5 rounded-xl border border-white/60 text-slate-900 bg-white/50 backdrop-blur-sm focus:bg-white focus:ring-4 outline-none transition-all font-semibold shadow-sm ${
+                  role === 'worker' ? 'focus:ring-orange-500/20 focus:border-orange-500' : 'focus:ring-green-500/20 focus:border-green-500'
                 }`}
                 placeholder="Enter password"
                 required
@@ -135,33 +143,33 @@ export default function UniversalLogin() {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full mt-4 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 disabled:bg-gray-400 flex items-center justify-center gap-2 cursor-pointer text-base ${
+              className={`w-full mt-6 text-white font-black py-4 rounded-xl shadow-lg transition-all transform active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex items-center justify-center gap-2 cursor-pointer text-base ${
                 role === 'worker' 
-                  ? 'bg-orange-500 hover:bg-orange-600' 
-                  : 'bg-green-600 hover:bg-green-700'
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-orange-500/30' 
+                  : 'bg-gradient-to-r from-green-600 to-green-700 hover:shadow-green-600/30'
               }`}
             >
               {loading ? (
-                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               ) : null}
-              Sign In
+              {loading ? 'Authenticating...' : 'Sign In Securely'}
             </button>
           </form>
 
-          <div className="text-center mt-6 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500 font-semibold">
+          <div className="text-center mt-8 pt-6 border-t border-slate-200/50">
+            <p className="text-sm text-slate-600 font-semibold">
               New to Kaammadat?{' '}
               <Link 
                 href={role === 'worker' ? '/worker/register' : '/job-giver/register'} 
-                className={`font-black hover:underline ${
-                  role === 'worker' ? 'text-orange-600' : 'text-green-700'
+                className={`font-black hover:underline transition-colors ${
+                  role === 'worker' ? 'text-orange-600 hover:text-orange-700' : 'text-green-700 hover:text-green-800'
                 }`}
               >
                 Register Here
               </Link>
             </p>
-            <div className="mt-4">
-              <Link href="/" className="text-xs text-gray-400 hover:text-gray-600 transition font-bold">
+            <div className="mt-5">
+              <Link href="/" className="inline-block px-4 py-2 rounded-full bg-slate-100/50 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all font-bold">
                 ← Return to Home
               </Link>
             </div>

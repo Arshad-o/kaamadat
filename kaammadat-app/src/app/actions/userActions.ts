@@ -123,15 +123,15 @@ export async function registerUser(formData: FormData) {
   }
 }
 
-export async function loginUser(email: string, password: string, type: 'admin' | 'worker' | 'job-giver') {
+export async function loginUser(identifier: string, password: string, type: 'admin' | 'worker' | 'job-giver') {
   try {
     const users = await getUsers();
     const user = users.find(
-      (u: any) => u.email.toLowerCase() === email.toLowerCase() && u.type === type
+      (u: any) => (u.email.toLowerCase() === identifier.toLowerCase() || u.mobile === identifier) && u.type === type
     );
 
     if (!user) {
-      return { success: false, error: 'Invalid email or user type.' };
+      return { success: false, error: 'Invalid Mobile Number/Email ID or user type.' };
     }
 
     // Backwards compatibility for old unhashed passwords
@@ -146,21 +146,36 @@ export async function loginUser(email: string, password: string, type: 'admin' |
       return { success: false, error: 'Incorrect password.' };
     }
 
-    // Set authenticated cookie session
-    const cookieStore = await cookies();
-    cookieStore.set('kaammadat_authenticated', 'true', { maxAge: 86400, path: '/' });
-    cookieStore.set('kaammadat_user_type', type, { maxAge: 86400, path: '/' });
-    cookieStore.set('kaammadat_user_email', email, { maxAge: 86400, path: '/' });
-
-    return { 
-      success: true, 
-      user: { 
-        name: user.name, 
-        email: user.email, 
-        mobile: user.mobile, 
-        type: user.type 
-      } 
-    };
+    if (type === 'admin') {
+      // Admins bypass OTP and get logged in immediately
+      const cookieStore = await cookies();
+      cookieStore.set('kaammadat_authenticated', 'true', { maxAge: 86400, path: '/' });
+      cookieStore.set('kaammadat_user_type', type, { maxAge: 86400, path: '/' });
+      cookieStore.set('kaammadat_user_email', user.email, { maxAge: 86400, path: '/' });
+      
+      return { 
+        success: true, 
+        user: { 
+          name: user.name, 
+          email: user.email, 
+          mobile: user.mobile, 
+          type: user.type 
+        } 
+      };
+    } else {
+      // Workers and Job Givers get an OTP
+      const otpResult = await sendOTP(user.email);
+      return {
+        success: true,
+        user: {
+          name: user.name,
+          email: user.email,
+          mobile: user.mobile,
+          type: user.type
+        },
+        otpResult
+      };
+    }
   } catch (error: any) {
     console.error("Error logging in user:", error);
     return { success: false, error: error.message };
