@@ -14,7 +14,7 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
   const [paymentMethod, setPaymentMethod] = useState<'qr' | 'upi_id' | 'apps'>('qr');
   const [upiId, setUpiId] = useState('');
   const [timeLeft, setTimeLeft] = useState(180); // 3 minutes
-  const [processing, setProcessing] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'failed'>('idle');
 
   // Timer countdown
   useEffect(() => {
@@ -36,25 +36,38 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}`;
 
   const handleSimulateSuccess = () => {
-    setProcessing(true);
+    setPaymentStatus('processing');
     // Simulate webhook real-time confirmation delay
     setTimeout(() => {
-      setProcessing(false);
-      onSuccess();
+      setPaymentStatus('idle'); // Reset for safety
+      onSuccess(); // Parent component handles the success (and sends email ONLY here)
     }, 1800);
   };
 
+  const handleSimulateFailure = () => {
+    setPaymentStatus('processing');
+    // Simulate a failed transaction where money might be cut
+    setTimeout(() => {
+      setPaymentStatus('failed');
+    }, 2500);
+  };
+
   const handleAppPay = (appName: string) => {
-    // 1. Launch the native UPI deep link (Opens Google Pay/PhonePe/Paytm on mobile devices)
+    // 1. Launch the native UPI deep link
     window.location.href = upiPayload;
 
-    // 2. Set checking / processing state to let the user know we are verifying
-    setProcessing(true);
+    // 2. Set checking / processing state
+    setPaymentStatus('processing');
 
-    // 3. Auto-simulate bank transaction confirmation when they return back (5 seconds)
+    // 3. Instead of auto-succeeding, let them use the simulator buttons below when they return, 
+    // or we can auto-fail/succeed. To give them control, we will just leave it in processing for a bit, 
+    // but the simulator buttons provide the exact testing they requested.
     setTimeout(() => {
-      setProcessing(false);
-      onSuccess();
+       // Default to success for native app click after 5.5s, unless they hit the fail button
+       if (paymentStatus === 'processing') {
+         setPaymentStatus('idle');
+         onSuccess();
+       }
     }, 5500);
   };
 
@@ -91,11 +104,31 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
         </div>
 
         <div className="p-6 flex flex-col items-center gap-5">
-          {processing ? (
+          {paymentStatus === 'processing' ? (
             <div className="flex flex-col items-center justify-center py-10 gap-4">
               <span className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
-              <p className="font-extrabold text-orange-600 animate-pulse text-base">Waiting for real-time bank confirmation...</p>
-              <p className="text-xs text-gray-400 font-semibold">Do not press back or close this window.</p>
+              <p className="font-extrabold text-orange-600 animate-pulse text-base text-center">Verifying Payment with Bank...</p>
+              <p className="text-xs text-gray-400 font-semibold text-center">Please do not press back or close this window.</p>
+            </div>
+          ) : paymentStatus === 'failed' ? (
+            <div className="flex flex-col items-center justify-center py-8 gap-4 animate-[fade-in_0.3s_ease-out]">
+              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-3xl shadow-inner">
+                ❌
+              </div>
+              <h4 className="font-black text-xl text-red-600 text-center">Payment Verification Failed</h4>
+              <div className="bg-red-50 border border-red-100 p-4 rounded-xl text-center">
+                <p className="text-sm font-bold text-red-800 mb-2">Amount not credited to Kaammadat account.</p>
+                <p className="text-xs text-red-600 font-medium leading-relaxed">
+                  If your money was deducted from your bank account, please do not worry. 
+                  It will be automatically refunded by your bank within <span className="font-black underline">3 to 5 working days</span>.
+                </p>
+              </div>
+              <button 
+                onClick={() => setPaymentStatus('idle')}
+                className="mt-2 w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition cursor-pointer"
+              >
+                Try Again
+              </button>
             </div>
           ) : (
             <>
@@ -233,21 +266,30 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
                 </div>
               )}
 
-              {/* Timer & Simulation button */}
+              {/* Timer & Simulation buttons */}
               <div className="w-full border-t border-gray-100 pt-4 flex flex-col items-center gap-3">
                 <div className="flex justify-between w-full text-xs font-bold text-gray-500">
                   <span>QR Session Expires in:</span>
                   <span className="text-red-500 font-extrabold">{formatTime(timeLeft)}</span>
                 </div>
                 
-                {/* Simulator Trigger */}
-                <button 
-                  type="button"
-                  onClick={handleSimulateSuccess}
-                  className="w-full mt-2 bg-slate-900 hover:bg-slate-950 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-md text-sm"
-                >
-                  ⚡ Simulate Real-Time Payment Success
-                </button>
+                {/* Simulator Triggers */}
+                <div className="flex flex-col w-full gap-2 mt-2">
+                  <button 
+                    type="button"
+                    onClick={handleSimulateSuccess}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-md text-sm"
+                  >
+                    ⚡ Simulate Payment Success
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={handleSimulateFailure}
+                    className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer text-sm"
+                  >
+                    ❌ Simulate Payment Failure (Refund)
+                  </button>
+                </div>
               </div>
             </>
           )}
