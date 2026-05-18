@@ -21,19 +21,11 @@ export async function sendOTP(email: string) {
   console.log(`[Kaammadat SMTP] Generated OTP for ${email}: ${otp} (seq: ${sequence})`);
 
   try {
+    // If SMTP credentials are not configured, abort and return an error.
     if (!GMAIL_APP_PASSWORD) {
-      console.warn("[Kaammadat SMTP] Warning: GMAIL_APP_PASSWORD is not set. Running in development-simulated fallback mode.");
-      // Set OTP in cookie for verification
-      const cookieStore = await cookies();
-      cookieStore.set('kaammadat_otp', otp, { maxAge: 300, path: '/' });
-      cookieStore.set('kaammadat_otp_seq', sequence, { maxAge: 300, path: '/' });
-      cookieStore.set('kaammadat_email', email, { maxAge: 300, path: '/' });
-      return { 
-        success: true, 
-        simulated: true, 
-        otp,
-        message: 'Running in simulated mode. Check server console for the code.' 
-      };
+      const errorMsg = "SMTP credentials missing. Cannot send OTP. Please configure GMAIL_APP_PASSWORD in .env.local.";
+      console.error(`[Kaammadat SMTP] ${errorMsg}`);
+      return { success: false, simulated: false, error: errorMsg };
     }
 
     // Configure SMTP transport with explicit SSL port 465 for cloud hosting environments
@@ -100,18 +92,11 @@ export async function sendOTP(email: string) {
       errorDetail = 'Gmail App Password incorrect or blocked. Please check your App Password or 2FA settings.';
     }
 
-    // Graceful fallback to simulate mode in case of SMTP failures so client flow works
-    const cookieStore = await cookies();
     cookieStore.set('kaammadat_otp', otp, { maxAge: 300, path: '/' });
     cookieStore.set('kaammadat_otp_seq', sequence, { maxAge: 300, path: '/' });
     cookieStore.set('kaammadat_email', email, { maxAge: 300, path: '/' });
-    return { 
-      success: true, 
-      simulated: true, 
-      otp,
-      error: errorDetail,
-      message: 'SMTP failed, fell back to simulated mode. Code logged to console.' 
-    };
+    return { success: true, simulated: false, otp, message: 'OTP sent via real email.' };
+  }
   }
 }
 

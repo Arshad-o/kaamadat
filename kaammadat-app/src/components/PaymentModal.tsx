@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { playNotificationSound } from '@/utils/playSound';
+import { sendPaymentReceiptEmail } from '@/app/actions/emailActions';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -35,12 +36,30 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
   const upiPayload = `upi://pay?pa=arshadbunny77@okhdfcbank&pn=Kaammadat%20Platform&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(title)}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}`;
 
-  const handleSimulateSuccess = () => {
+  const handleSimulateSuccess = async () => {
     setPaymentStatus('processing');
-    // Simulate webhook real-time confirmation delay
-    setTimeout(() => {
-      setPaymentStatus('idle'); // Reset for safety
-      onSuccess(); // Parent component handles the success (and sends email ONLY here)
+    // Simulate real payment processing delay (e.g., waiting for bank confirmation)
+    setTimeout(async () => {
+      // After payment is assumed credited, send receipt email
+      try {
+        const receiptResult = await sendPaymentReceiptEmail(
+          userEmail,
+          amount,
+          title,
+          'worker',
+          'Customer'
+        );
+        if (receiptResult.success) {
+          setPaymentStatus('idle');
+          onSuccess();
+        } else {
+          // Receipt email failed – treat as payment failure
+          setPaymentStatus('failed');
+        }
+      } catch (e) {
+        console.error('Error sending receipt email:', e);
+        setPaymentStatus('failed');
+      }
     }, 1800);
   };
 
@@ -158,7 +177,6 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
               {paymentMethod === 'qr' && (
                 <div className="flex flex-col items-center gap-3">
                   <div className="p-3 bg-white border-2 border-dashed border-gray-200 rounded-2xl shadow-sm relative group">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={qrUrl} 
                       alt="UPI QR Code" 
@@ -180,19 +198,16 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
 
               {paymentMethod === 'apps' && (
                 <div className="flex flex-col gap-3.5 w-full">
-                  {/* Info Tip */}
                   <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl text-center text-xs text-blue-700 font-semibold mb-1">
                     ℹ️ Clicking an app will automatically launch it on your mobile device to complete payment instantly!
                   </div>
 
-                  {/* 1. PhonePe (First) */}
                   <button 
                     onClick={() => handleAppPay('PhonePe')} 
                     className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-purple-500 hover:bg-purple-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
                   >
                     <span className="font-extrabold text-gray-800 flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-black overflow-hidden flex items-center justify-center border border-gray-800 shadow-md">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                           src="/phonepe.jpg" 
                           alt="PhonePe Logo" 
@@ -204,14 +219,12 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
                     <span className="text-xs text-purple-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
                   </button>
 
-                  {/* 2. Google Pay (Second) */}
                   <button 
                     onClick={() => handleAppPay('Google Pay')} 
                     className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
                   >
                     <span className="font-extrabold text-gray-800 flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-white overflow-hidden flex items-center justify-center border border-gray-200 shadow-sm">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                           src="/gpay.jpg" 
                           alt="GPay Logo" 
@@ -223,14 +236,12 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
                     <span className="text-xs text-blue-600 font-bold opacity-0 group-hover:opacity-100 transition">Pay Instant →</span>
                   </button>
 
-                  {/* 3. Paytm (Third) */}
                   <button 
                     onClick={() => handleAppPay('Paytm')} 
                     className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-cyan-500 hover:bg-cyan-50/20 text-left flex items-center justify-between transition cursor-pointer group active:scale-[0.98]"
                   >
                     <span className="font-extrabold text-gray-800 flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-white overflow-hidden flex items-center justify-center border border-gray-200 shadow-sm">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                           src="/paytm.jpg" 
                           alt="Paytm Logo" 
@@ -280,7 +291,7 @@ export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose
                     onClick={handleSimulateSuccess}
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-md text-sm"
                   >
-                    ⚡ Simulate Payment Success
+                    ⚡ Simulate Payment Success (Send Receipt)
                   </button>
                   <button 
                     type="button"
