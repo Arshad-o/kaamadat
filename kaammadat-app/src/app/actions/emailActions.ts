@@ -14,9 +14,11 @@ export async function sendOTP(email: string) {
     return { success: false, error: 'Invalid email address' };
   }
 
-  // Generate a cryptographically secure-looking 4-digit OTP
-  const otp = Math.floor(1000 + Math.random() * 9000).toString();
-  console.log(`[Kaammadat SMTP] Generated OTP for ${email}: ${otp}`);
+  // Generate a cryptographically secure-looking 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  // Sequence ID: every resend invalidates the previous OTP
+  const sequence = Date.now().toString();
+  console.log(`[Kaammadat SMTP] Generated OTP for ${email}: ${otp} (seq: ${sequence})`);
 
   try {
     if (!GMAIL_APP_PASSWORD) {
@@ -24,6 +26,7 @@ export async function sendOTP(email: string) {
       // Set OTP in cookie for verification
       const cookieStore = await cookies();
       cookieStore.set('kaammadat_otp', otp, { maxAge: 300, path: '/' });
+      cookieStore.set('kaammadat_otp_seq', sequence, { maxAge: 300, path: '/' });
       cookieStore.set('kaammadat_email', email, { maxAge: 300, path: '/' });
       return { 
         success: true, 
@@ -44,12 +47,12 @@ export async function sendOTP(email: string) {
       },
     });
 
-    // Elegant Indian-themed HTML Email Layout
+    // Dispatch the email — include the sequence ID in the subject so user can identify which code is latest
     const mailOptions = {
       from: `"Kaammadat Portal" <${GMAIL_USER}>`,
       to: email,
       subject: `${otp} is your Kaammadat Verification Code`,
-      text: `Welcome to Kaammadat! Your verification code is: ${otp}. This code is valid for 5 minutes.`,
+      text: `Welcome to Kaammadat! Your verification code is: ${otp}. This code is valid for 5 minutes. If you requested multiple codes, only USE THE LATEST CODE that arrived.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #f0f0f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
           <div style="background: linear-gradient(135deg, #f97316 0%, #16a34a 100%); padding: 24px; text-align: center; color: white;">
@@ -59,13 +62,16 @@ export async function sendOTP(email: string) {
           <div style="padding: 30px; background-color: #ffffff; text-align: center;">
             <h2 style="color: #333333; margin-top: 0; font-size: 20px;">Email Verification</h2>
             <p style="color: #666666; font-size: 15px; line-height: 1.5; margin-bottom: 24px;">
-              Thank you for registering on Kaammadat. Use the 4-digit one-time password (OTP) below to secure your sign-in:
+              Thank you for registering on Kaammadat. Use the 6-digit one-time password (OTP) below to secure your sign-in:
             </p>
-            <div style="background-color: #f3f4f6; border-radius: 8px; padding: 16px 24px; display: inline-block; margin-bottom: 24px;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1e293b; font-family: monospace;">${otp}</span>
+            <div style="background-color: #f3f4f6; border-radius: 8px; padding: 16px 24px; display: inline-block; margin-bottom: 16px;">
+              <span style="font-size: 36px; font-weight: bold; letter-spacing: 10px; color: #1e293b; font-family: monospace;">${otp}</span>
             </div>
-            <p style="color: #94a3b8; font-size: 13px; margin: 0;">
+            <p style="color: #94a3b8; font-size: 13px; margin: 0 0 8px 0;">
               This code will expire in 5 minutes. Please do not share this OTP with anyone.
+            </p>
+            <p style="color: #ef4444; font-size: 12px; font-weight: bold; margin: 0;">
+              ⚠️ If you received multiple OTP emails, only use the MOST RECENT one.
             </p>
           </div>
           <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-top: 1px solid #f1f5f9; color: #64748b; font-size: 12px;">
@@ -79,23 +85,31 @@ export async function sendOTP(email: string) {
     await transporter.sendMail(mailOptions);
     console.log(`[Kaammadat SMTP] Email dispatched successfully to ${email}`);
 
-    // Set OTP in cookie for validation
+    // Set OTP in cookie for validation — overwriting any previous OTP (invalidates old one)
     const cookieStore = await cookies();
     cookieStore.set('kaammadat_otp', otp, { maxAge: 300, path: '/' });
+    cookieStore.set('kaammadat_otp_seq', sequence, { maxAge: 300, path: '/' });
     cookieStore.set('kaammadat_email', email, { maxAge: 300, path: '/' });
 
     return { success: true, simulated: false };
   } catch (error: any) {
     console.error(`[Kaammadat SMTP] Error sending email to ${email}:`, error);
+
+    let errorDetail = error.message;
+    if (errorDetail?.includes('Invalid login') || errorDetail?.includes('Application-specific password')) {
+      errorDetail = 'Gmail App Password incorrect or blocked. Please check your App Password or 2FA settings.';
+    }
+
     // Graceful fallback to simulate mode in case of SMTP failures so client flow works
     const cookieStore = await cookies();
     cookieStore.set('kaammadat_otp', otp, { maxAge: 300, path: '/' });
+    cookieStore.set('kaammadat_otp_seq', sequence, { maxAge: 300, path: '/' });
     cookieStore.set('kaammadat_email', email, { maxAge: 300, path: '/' });
     return { 
       success: true, 
       simulated: true, 
       otp,
-      error: error.message,
+      error: errorDetail,
       message: 'SMTP failed, fell back to simulated mode. Code logged to console.' 
     };
   }

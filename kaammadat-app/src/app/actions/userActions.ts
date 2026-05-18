@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { sendOTP, verifyOTP } from './emailActions';
 import { cookies } from 'next/headers';
+import bcrypt from 'bcryptjs';
 
 const usersFilePath = path.join(process.cwd(), 'users.json');
 
@@ -63,6 +64,14 @@ export async function registerUser(formData: FormData) {
       return { success: false, error: 'Name, Email, and Password are required.' };
     }
 
+    if (mobile && (mobile.length !== 10 || !/^\d{10}$/.test(mobile))) {
+      return { success: false, error: 'Mobile number must be exactly 10 digits.' };
+    }
+
+    if (aadhar && (aadhar.length !== 12 || !/^\d{12}$/.test(aadhar))) {
+      return { success: false, error: 'Aadhar number must be exactly 12 digits.' };
+    }
+
     const users = await getUsers();
     
     // 1. Email check
@@ -88,6 +97,9 @@ export async function registerUser(formData: FormData) {
     }
 
     // Add new user
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const newUser = {
       id: Date.now(),
       name,
@@ -95,7 +107,7 @@ export async function registerUser(formData: FormData) {
       email,
       aadhar,
       address,
-      password,
+      password: hashedPassword,
       type
     };
 
@@ -122,7 +134,15 @@ export async function loginUser(email: string, password: string, type: 'admin' |
       return { success: false, error: 'Invalid email or user type.' };
     }
 
-    if (user.password !== password) {
+    // Backwards compatibility for old unhashed passwords
+    let isMatch = false;
+    if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$')) {
+      isMatch = await bcrypt.compare(password, user.password);
+    } else {
+      isMatch = (user.password === password);
+    }
+
+    if (!isMatch) {
       return { success: false, error: 'Incorrect password.' };
     }
 
@@ -185,7 +205,10 @@ export async function resetPassword(email: string, enteredOtp: string, newPasswo
       return { success: false, error: 'User account not found.' };
     }
 
-    users[userIdx].password = newPassword;
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    users[userIdx].password = hashedPassword;
     await saveUsers(users);
 
     return { success: true };

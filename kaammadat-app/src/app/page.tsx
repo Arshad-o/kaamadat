@@ -54,29 +54,30 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-orange-50 via-white to-green-50 font-[family-name:var(--font-geist-sans)] p-8 relative animate-[fade-in_0.8s_ease-in-out]">
       
-      {/* Top Left Universal Login */}
-      <div className="absolute top-4 left-4 flex gap-2">
+      {/* Top Right Controls */}
+      <div className="absolute top-4 right-4 flex items-center gap-3">
+        {/* Universal Login */}
         <Link href="/login">
           <button className="bg-white hover:bg-slate-50 text-slate-800 font-extrabold px-5 py-2.5 rounded-full shadow border border-orange-100 text-sm transition hover:shadow-md cursor-pointer flex items-center gap-1.5 active:scale-95">
             🔑 Login
           </button>
         </Link>
-      </div>
 
-      {/* Language Selector */}
-      <div className="absolute top-4 right-4 flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow border border-orange-100 transition hover:shadow-md">
-        <span className="text-lg">🌐</span>
-        <select 
-          value={language}
-          onChange={handleLanguageChange}
-          className="bg-transparent text-sm font-bold text-gray-700 outline-none cursor-pointer pr-1"
-        >
-          {languages.map((lang) => (
-            <option key={lang.code} value={lang.code}>
-              {lang.name}
-            </option>
-          ))}
-        </select>
+        {/* Language Selector */}
+        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow border border-orange-100 transition hover:shadow-md h-full">
+          <span className="text-lg">🌐</span>
+          <select 
+            value={language}
+            onChange={handleLanguageChange}
+            className="bg-transparent text-sm font-bold text-gray-700 outline-none cursor-pointer pr-1 py-0.5"
+          >
+            {languages.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <main className="flex flex-col items-center gap-8 text-center max-w-2xl mt-8">

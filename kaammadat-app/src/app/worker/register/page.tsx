@@ -41,6 +41,16 @@ export default function WorkerRegister() {
       return;
     }
 
+    if (formData.mobile.length !== 10 || !/^\d{10}$/.test(formData.mobile)) {
+      setError('Mobile number must be exactly 10 digits.');
+      return;
+    }
+
+    if (formData.aadhar.length !== 12 || !/^\d{12}$/.test(formData.aadhar)) {
+      setError('Aadhar number must be exactly 12 digits.');
+      return;
+    }
+
     if (!formData.terms) {
       setError('You must agree to the Terms & Conditions.');
       return;
@@ -120,7 +130,10 @@ export default function WorkerRegister() {
                 value={formData.mobile}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
-                placeholder="+91 xxxxx xxxxx" 
+                placeholder="10 digit mobile number" 
+                maxLength={10}
+                minLength={10}
+                pattern="\d{10}"
                 required
               />
             </div>
@@ -146,7 +159,10 @@ export default function WorkerRegister() {
               value={formData.aadhar}
               onChange={handleChange}
               className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
-              placeholder="xxxx-xxxx-xxxx" 
+              placeholder="12 digit aadhar number" 
+              maxLength={12}
+              minLength={12}
+              pattern="\d{12}"
               required
             />
           </div>
