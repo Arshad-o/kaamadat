@@ -6,6 +6,7 @@ import PaymentModal from '@/components/PaymentModal';
 import { sendPaymentReceiptEmail } from '@/app/actions/emailActions';
 import { playNotificationSound } from '@/utils/playSound';
 import { saveFraudReport } from '@/app/actions/fraudActions';
+import IndiaMapBackground from '@/components/IndiaMapBackground';
 
 export default function JobDetails() {
   const { t } = useLanguage();
@@ -112,7 +113,8 @@ export default function JobDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-geist-sans)] pb-20">
+    <div className="min-h-screen bg-transparent font-[family-name:var(--font-geist-sans)] pb-20 relative z-0">
+      <IndiaMapBackground activeStateName={job.location} />
       {/* Header Image & Back Button */}
       <div className="relative h-56 w-full animate-[fade-in_0.4s_ease-in-out]">
          {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -131,7 +133,7 @@ export default function JobDetails() {
       <main className="p-4 max-w-4xl mx-auto -mt-4 relative z-10 flex flex-col gap-4">
         
         {/* Info Card */}
-        <div className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100 flex justify-between items-center">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-5 shadow-lg border border-gray-100/50 flex justify-between items-center">
            <div>
              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('daily_wages')}</p>
              <p className="text-2xl font-black text-green-600">₹{job.salary}<span className="text-sm text-gray-500 font-normal">/day</span></p>
@@ -143,7 +145,7 @@ export default function JobDetails() {
         </div>
 
         {/* Job Giver Info */}
-        <div className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100 flex justify-between items-center">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-5 shadow-lg border border-gray-100/50 flex justify-between items-center">
            <div className="flex gap-3 items-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-black text-xl shadow-inner">
                 {job.giver ? job.giver.charAt(0) : 'A'}
@@ -159,7 +161,7 @@ export default function JobDetails() {
         </div>
 
         {/* Live Work Map Embed centered exactly on GPS coordinates */}
-        <div className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100 overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-5 shadow-lg border border-gray-100/50 overflow-hidden">
            <div className="flex justify-between items-end mb-3">
              <h3 className="font-extrabold text-gray-800">{t('work_location')}</h3>
              <span className="bg-blue-50 text-blue-600 text-xs font-extrabold px-2.5 py-1 rounded-md shadow-sm">
@@ -187,7 +189,7 @@ export default function JobDetails() {
         </div>
 
         {/* Apply and Payment Card */}
-        <div className="bg-yellow-50 rounded-2xl p-5 border border-yellow-200 shadow-sm">
+        <div className="bg-yellow-50/90 backdrop-blur-md rounded-2xl p-5 border border-yellow-200/50 shadow-sm">
            <h4 className="font-extrabold text-yellow-800 mb-3 text-base">{t('checkout')}</h4>
            <div className="flex justify-between text-sm mb-2 font-semibold text-gray-700"><span>Application Fee:</span><span>₹{fee.toFixed(2)}</span></div>
            <div className="flex justify-between text-sm text-green-600 mb-3 font-extrabold"><span>Silver Card Discount (3%):</span><span>-₹{discount.toFixed(2)}</span></div>

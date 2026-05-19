@@ -6,6 +6,7 @@ import { postJob } from '@/app/actions/jobActions';
 import { sendPaymentReceiptEmail } from '@/app/actions/emailActions';
 import PaymentModal from '@/components/PaymentModal';
 import { playNotificationSound } from '@/utils/playSound';
+import IndiaMapBackground from '@/components/IndiaMapBackground';
 
 export default function PostJob() {
   const { t } = useLanguage();
@@ -169,8 +170,9 @@ export default function PostJob() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-[family-name:var(--font-geist-sans)]">
-      <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+    <div className="min-h-screen bg-transparent p-4 md:p-8 font-[family-name:var(--font-geist-sans)] relative z-0">
+      <IndiaMapBackground activeStateName={locationText} />
+      <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100/50">
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 text-white flex items-center justify-between">
           <h2 className="text-2xl font-extrabold tracking-tight">{t('post_new_job')}</h2>
           <Link href="/job-giver/dashboard" className="text-sm font-bold underline hover:text-orange-100">{t('cancel')}</Link>
