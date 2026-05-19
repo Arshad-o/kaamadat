@@ -1,26 +1,2 @@
 [
-  {
-    "id": 1,
-    "title": "Electrician (Wiring)",
-    "giver": "Anand Sharma",
-    "location": "Srinagar, Kashmir",
-    "date": "Oct 15 - Oct 20",
-    "salary": 800,
-    "type": "Electrician",
-    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=150&h=150&fit=crop",
-    "cap": "3/10 Slots",
-    "isFull": false
-  },
-  {
-    "id": 2,
-    "title": "Catering Boys",
-    "giver": "Royal Events",
-    "location": "Mumbai, Maharashtra",
-    "date": "Oct 12 (1 Day)",
-    "salary": 1200,
-    "type": "Catering",
-    "img": "https://images.unsplash.com/photo-1555244162-803834f70033?w=150&h=150&fit=crop",
-    "cap": "15/20 Slots",
-    "isFull": false
-  }
 ]
