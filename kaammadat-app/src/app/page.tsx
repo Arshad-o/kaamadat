@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage, languages } from '@/context/LanguageContext';
+import IndiaMapBackground from '@/components/IndiaMapBackground';
 
 export default function Home() {
   const { language, setLanguage, t } = useLanguage();
@@ -52,7 +53,8 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-orange-50 via-white to-green-50 font-[family-name:var(--font-geist-sans)] p-8 relative animate-[fade-in_0.8s_ease-in-out]">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-orange-50/50 via-white/50 to-green-50/50 font-[family-name:var(--font-geist-sans)] p-8 relative animate-[fade-in_0.8s_ease-in-out] z-0 overflow-hidden">
+      <IndiaMapBackground />
       
       {/* Top Right Controls */}
       <div className="absolute top-4 right-4 flex items-center gap-3">
