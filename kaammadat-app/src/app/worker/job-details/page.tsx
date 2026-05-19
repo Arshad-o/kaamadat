@@ -182,10 +182,19 @@ export default function JobDetails() {
               ></iframe>
            </div>
 
-           <div className="mt-3 bg-blue-50/50 p-3 rounded-lg flex items-center justify-between text-xs font-bold text-blue-800 border border-blue-100">
+           <div className="mt-3 bg-blue-50/50 p-3 rounded-lg flex items-center justify-between text-xs font-bold text-blue-800 border border-blue-100 mb-4">
              <span>{job.location}</span>
              <span>GPS: {job.lat.toFixed(4)}°, {job.lng.toFixed(4)}°</span>
            </div>
+
+           <a 
+             href={`https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}`}
+             target="_blank"
+             rel="noopener noreferrer"
+             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-extrabold py-3.5 rounded-xl shadow-lg hover:from-blue-600 hover:to-blue-700 transition transform hover:-translate-y-0.5 flex justify-center items-center gap-2"
+           >
+             <span className="text-xl">📍</span> Start GPS Navigation
+           </a>
         </div>
 
         {/* Apply and Payment Card */}
