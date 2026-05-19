@@ -13,7 +13,7 @@ function ForgotPasswordContent() {
   const [role, setRole] = useState<'worker' | 'job-giver' | 'admin'>('worker');
   const [email, setEmail] = useState('');
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '']);
+  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
@@ -24,6 +24,8 @@ function ForgotPasswordContent() {
 
   // References for automatic OTP box switching
   const inputRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -73,7 +75,7 @@ function ForgotPasswordContent() {
     newDigits[index] = value;
     setOtpDigits(newDigits);
 
-    if (value !== '' && index < 3) {
+    if (value !== '' && index < 5) {
       inputRefs[index + 1].current?.focus();
     }
   };
@@ -87,10 +89,10 @@ function ForgotPasswordContent() {
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pasteData = e.clipboardData.getData('text').trim();
-    if (pasteData.length === 4 && !isNaN(Number(pasteData))) {
+    if (pasteData.length === 6 && !isNaN(Number(pasteData))) {
       const digits = pasteData.split('');
       setOtpDigits(digits);
-      inputRefs[3].current?.focus();
+      inputRefs[5].current?.focus();
     }
   };
 
@@ -234,7 +236,7 @@ function ForgotPasswordContent() {
               <span className="text-4xl">📨</span>
               <h2 className="text-2xl font-black mt-3 tracking-tight">Verify Identity</h2>
               <p className={`text-sm mt-2 font-medium ${role === 'admin' ? 'text-slate-400' : 'text-slate-600'}`}>
-                Enter the 4-digit code sent to: <span className="font-bold text-orange-500 block mt-0.5">{email}</span>
+                Enter the 6-digit code sent to: <span className="font-bold text-orange-500 block mt-0.5">{email}</span>
               </p>
             </div>
 
@@ -264,7 +266,7 @@ function ForgotPasswordContent() {
               )}
 
               {/* OTP Digits */}
-              <div className="flex justify-center gap-4 my-6">
+              <div className="flex justify-center gap-2 my-6">
                 {otpDigits.map((digit, i) => (
                   <input
                     key={i}
@@ -275,7 +277,7 @@ function ForgotPasswordContent() {
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(i, e)}
                     onPaste={handlePaste}
-                    className={`w-12 h-12 text-center text-2xl font-black rounded-xl border focus:ring-2 outline-none transition ${getInputClass()}`}
+                    className={`w-10 h-12 text-center text-2xl font-black rounded-xl border focus:ring-2 outline-none transition ${getInputClass()}`}
                   />
                 ))}
               </div>

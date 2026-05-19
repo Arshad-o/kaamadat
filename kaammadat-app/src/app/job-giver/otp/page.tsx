@@ -9,7 +9,7 @@ export default function JobGiverOTP() {
   const { t } = useLanguage();
   const router = useRouter();
 
-  const [otp, setOtp] = useState<string[]>(['', '', '', '']);
+  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [email, setEmail] = useState('');
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState('');
@@ -19,6 +19,8 @@ export default function JobGiverOTP() {
 
   // References for automatic focus switching
   const inputRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -51,7 +53,7 @@ export default function JobGiverOTP() {
     setOtp(newOtp);
 
     // Automatically focus next input box
-    if (value !== '' && index < 3) {
+    if (value !== '' && index < 5) {
       inputRefs[index + 1].current?.focus();
     }
   };
@@ -66,17 +68,17 @@ export default function JobGiverOTP() {
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pasteData = e.clipboardData.getData('text').trim();
-    if (pasteData.length === 4 && !isNaN(Number(pasteData))) {
+    if (pasteData.length === 6 && !isNaN(Number(pasteData))) {
       const digits = pasteData.split('');
       setOtp(digits);
-      inputRefs[3].current?.focus();
+      inputRefs[5].current?.focus();
     }
   };
 
   const handleVerify = async () => {
     const fullOtp = otp.join('');
-    if (fullOtp.length !== 4) {
-      setError('Please enter a 4-digit OTP.');
+    if (fullOtp.length !== 6) {
+      setError('Please enter a 6-digit OTP.');
       return;
     }
 
@@ -156,7 +158,7 @@ export default function JobGiverOTP() {
               </div>
             )}
 
-            <div className="flex justify-center gap-4 mb-8">
+            <div className="flex justify-center gap-2 mb-8">
               {otp.map((digit, i) => (
                 <input 
                   key={i} 
@@ -167,7 +169,7 @@ export default function JobGiverOTP() {
                   onChange={(e) => handleChange(i, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(i, e)}
                   onPaste={handlePaste}
-                  className="w-14 h-14 text-center text-3xl font-extrabold rounded-xl border-2 border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition" 
+                  className="w-10 h-12 sm:w-12 sm:h-14 text-center text-2xl sm:text-3xl font-extrabold rounded-xl border-2 border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition" 
                 />
               ))}
             </div>

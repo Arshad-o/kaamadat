@@ -7,11 +7,12 @@ interface PaymentModalProps {
   isOpen: boolean;
   amount: number;
   title: string;
+  userEmail?: string;
   onSuccess: () => void;
   onClose: () => void;
 }
 
-export default function PaymentModal({ isOpen, amount, title, onSuccess, onClose }: PaymentModalProps) {
+export default function PaymentModal({ isOpen, amount, title, userEmail = 'user@example.com', onSuccess, onClose }: PaymentModalProps) {
   const [paymentMethod, setPaymentMethod] = useState<'qr' | 'upi_id' | 'apps'>('qr');
   const [upiId, setUpiId] = useState('');
   const [timeLeft, setTimeLeft] = useState(180); // 3 minutes

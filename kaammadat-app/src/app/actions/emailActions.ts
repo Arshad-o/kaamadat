@@ -14,8 +14,8 @@ export async function sendOTP(email: string) {
     return { success: false, error: 'Invalid email address' };
   }
 
-  // Generate a cryptographically secure-looking 4-digit OTP
-  const otp = Math.floor(1000 + Math.random() * 9000).toString();
+  // Generate a cryptographically secure-looking 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
   // Sequence ID: every resend invalidates the previous OTP
   const sequence = Date.now().toString();
   console.log(`[Kaammadat SMTP] Generated OTP for ${email}: ${otp} (seq: ${sequence})`);
@@ -54,7 +54,7 @@ export async function sendOTP(email: string) {
           <div style="padding: 30px; background-color: #ffffff; text-align: center;">
             <h2 style="color: #333333; margin-top: 0; font-size: 20px;">Email Verification</h2>
             <p style="color: #666666; font-size: 15px; line-height: 1.5; margin-bottom: 24px;">
-              Thank you for registering on Kaammadat. Use the 4-digit one-time password (OTP) below to secure your sign-in:
+              Thank you for registering on Kaammadat. Use the 6-digit one-time password (OTP) below to secure your sign-in:
             </p>
             <div style="background-color: #f3f4f6; border-radius: 8px; padding: 16px 24px; display: inline-block; margin-bottom: 16px;">
               <span style="font-size: 36px; font-weight: bold; letter-spacing: 10px; color: #1e293b; font-family: monospace;">${otp}</span>
@@ -92,11 +92,11 @@ export async function sendOTP(email: string) {
       errorDetail = 'Gmail App Password incorrect or blocked. Please check your App Password or 2FA settings.';
     }
 
-    cookieStore.set('kaammadat_otp', otp, { maxAge: 300, path: '/' });
-    cookieStore.set('kaammadat_otp_seq', sequence, { maxAge: 300, path: '/' });
-    cookieStore.set('kaammadat_email', email, { maxAge: 300, path: '/' });
+    const cookieStoreCatch = await cookies();
+    cookieStoreCatch.set({ name: 'kaammadat_otp', value: otp, maxAge: 300, path: '/' });
+    cookieStoreCatch.set({ name: 'kaammadat_otp_seq', value: sequence, maxAge: 300, path: '/' });
+    cookieStoreCatch.set({ name: 'kaammadat_email', value: email, maxAge: 300, path: '/' });
     return { success: true, simulated: false, otp, message: 'OTP sent via real email.' };
-  }
   }
 }
 

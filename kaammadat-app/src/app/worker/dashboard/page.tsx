@@ -3,18 +3,29 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import LogoutModal from '@/components/LogoutModal';
+import { getJobs } from '@/app/actions/jobActions';
 
 export default function WorkerDashboard() {
   const { t } = useLanguage();
   const [workerName, setWorkerName] = useState('Rahul Kumar');
   const [showLogout, setShowLogout] = useState(false);
   const [workPhotos, setWorkPhotos] = useState<any[]>([]);
+  
+  // Local Filtering State
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedMandal, setSelectedMandal] = useState('');
+  const [selectedAmount, setSelectedAmount] = useState('');
+  const [jobs, setJobs] = useState<any[]>([]);
 
   useEffect(() => {
     const savedName = localStorage.getItem('kaammadat_user_name');
     if (savedName) setWorkerName(savedName);
     const savedPhotos = localStorage.getItem('kaammadat_work_photos');
     if (savedPhotos) setWorkPhotos(JSON.parse(savedPhotos));
+
+    // Fetch jobs for local filtering
+    getJobs().then(data => setJobs(data));
   }, []);
 
   const executeLogout = () => {
@@ -26,8 +37,28 @@ export default function WorkerDashboard() {
     window.location.href = '/';
   };
 
+  // Filter Jobs
+  const filteredJobs = jobs.filter(job => {
+    let match = true;
+    const loc = job.location.toLowerCase();
+    
+    if (selectedState && !loc.includes(selectedState.toLowerCase())) match = false;
+    if (selectedDistrict && !loc.includes(selectedDistrict.toLowerCase())) match = false;
+    if (selectedMandal && !loc.includes(selectedMandal.toLowerCase())) match = false;
+    
+    if (selectedAmount) {
+      const sal = parseInt(job.salary);
+      if (selectedAmount === '100-500' && (sal < 100 || sal > 500)) match = false;
+      else if (selectedAmount === '500-1000' && (sal < 500 || sal > 1000)) match = false;
+      else if (selectedAmount === '1000-5000' && (sal < 1000 || sal > 5000)) match = false;
+      else if (selectedAmount === '5000-10000' && (sal < 5000 || sal > 10000)) match = false;
+    }
+    
+    return match;
+  });
+
   return (
-    <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-geist-sans)] animate-[fade-in_0.6s_ease-in-out]">
+    <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-geist-sans)] animate-[fade-in_0.6s_ease-in-out] pb-10">
       {/* Header */}
       <header className="bg-orange-500 text-white p-4 shadow-md flex justify-between items-center">
         <Link href="/worker/profile" className="flex items-center gap-3 hover:opacity-90 transition cursor-pointer">
@@ -65,6 +96,106 @@ export default function WorkerDashboard() {
                  <span className="text-3xl transition group-hover:scale-110 self-start">📋</span>
                  <span className="font-extrabold text-lg self-end">{t('applied_jobs')}</span>
               </Link>
+           </div>
+        </section>
+
+        {/* Local Work Finder */}
+        <section className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+           <h3 className="text-xl font-bold mb-4 text-gray-800">Find Local Work Near You</h3>
+           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+             <select value={selectedState} onChange={e => setSelectedState(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
+               <option value="">All States</option>
+               <option value="maharashtra">Maharashtra</option>
+               <option value="up">Uttar Pradesh</option>
+               <option value="delhi">Delhi</option>
+               <option value="karnataka">Karnataka</option>
+               <option value="kashmir">Jammu & Kashmir</option>
+               <option value="ap">Andhra Pradesh</option>
+               <option value="telangana">Telangana</option>
+             </select>
+             
+             <select value={selectedDistrict} onChange={e => setSelectedDistrict(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
+               <option value="">All Districts</option>
+               <option value="mumbai">Mumbai</option>
+               <option value="pune">Pune</option>
+               <option value="lucknow">Lucknow</option>
+               <option value="bangalore">Bangalore</option>
+               <option value="srinagar">Srinagar</option>
+               <option value="hyderabad">Hyderabad</option>
+               <option value="vizag">Vizag</option>
+             </select>
+
+             <select value={selectedMandal} onChange={e => setSelectedMandal(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
+               <option value="">All Mandals</option>
+               <option value="mandal-1">Mandal 1</option>
+               <option value="mandal-2">Mandal 2</option>
+               <option value="mandal-3">Mandal 3</option>
+             </select>
+
+             <select value={selectedAmount} onChange={e => setSelectedAmount(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
+               <option value="">Any Amount</option>
+               <option value="100-500">₹100 - ₹500</option>
+               <option value="500-1000">₹500 - ₹1,000</option>
+               <option value="1000-5000">₹1,000 - ₹5,000</option>
+               <option value="5000-10000">₹5,000 - ₹10,000</option>
+             </select>
+           </div>
+
+           <div className="flex flex-col gap-4">
+             {filteredJobs.length === 0 ? (
+                <div className="p-8 text-center bg-orange-50 rounded-xl border border-orange-100">
+                  <p className="text-orange-800 font-bold">No local works found for these filters.</p>
+                  <button onClick={() => { setSelectedState(''); setSelectedDistrict(''); setSelectedMandal(''); setSelectedAmount(''); }} className="mt-2 text-sm text-orange-600 font-bold hover:underline cursor-pointer">Clear Filters</button>
+                </div>
+             ) : (
+                filteredJobs.slice(0, 5).map(job => {
+                  const isFull = job.cap.includes('FULL');
+                  return (
+                    <div key={job.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex gap-4 relative overflow-hidden transition hover:shadow-md cursor-pointer">
+                      <div className="w-16 h-16 shrink-0">
+                        <img src={job.img} alt={job.type} className="w-full h-full object-cover rounded-full shadow-inner border-2 border-orange-100" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-bold text-gray-800 leading-tight">{job.title}</h3>
+                          <span className="font-bold text-green-600">₹{job.salary}/day</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                          <span className="text-orange-500">📍</span> {job.location}
+                        </p>
+                        
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isFull ? 'bg-red-100 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
+                            {job.cap}
+                          </span>
+                          {!isFull ? (
+                            <Link href="/worker/job-details">
+                              <button 
+                                onClick={() => localStorage.setItem('kaammadat_selected_job', JSON.stringify(job))}
+                                className="bg-orange-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow hover:bg-orange-600 cursor-pointer"
+                              >
+                                View
+                              </button>
+                            </Link>
+                          ) : (
+                            <button className="bg-gray-300 text-gray-500 px-3 py-1 rounded-lg text-xs font-bold cursor-not-allowed">
+                              Full
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {isFull && <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px]"></div>}
+                    </div>
+                  );
+                })
+             )}
+             
+             {filteredJobs.length > 5 && (
+               <Link href="/worker/search" className="text-center w-full block bg-gray-50 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-100 transition cursor-pointer">
+                 View All {filteredJobs.length} Local Jobs →
+               </Link>
+             )}
            </div>
         </section>
 
@@ -116,17 +247,6 @@ export default function WorkerDashboard() {
               ))}
             </div>
           )}
-        </section>
-
-        {/* Job Search Area */}
-        <section className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
-           <h3 className="text-xl font-bold mb-4 text-gray-800">{t('search_jobs')}</h3>
-           <div className="flex gap-2">
-             <input type="text" placeholder="e.g., Electrician, Carpenter..." className="flex-1 px-4 py-3 rounded-xl border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none font-medium transition" />
-             <Link href="/worker/search">
-               <button className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-600 transition h-full flex items-center justify-center cursor-pointer">Search</button>
-             </Link>
-           </div>
         </section>
 
       </main>
