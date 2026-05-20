@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import LogoutModal from '@/components/LogoutModal';
 import { getJobs } from '@/app/actions/jobActions';
+import { indiaLocations } from '@/data/indiaLocations';
+import { districtMandals } from '@/data/apMandals';
 
 export default function WorkerDashboard() {
   const { t } = useLanguage();
@@ -103,33 +105,25 @@ export default function WorkerDashboard() {
         <section className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
            <h3 className="text-xl font-bold mb-4 text-gray-800">Find Local Work Near You</h3>
            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-             <select value={selectedState} onChange={e => setSelectedState(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
+             <select value={selectedState} onChange={e => { setSelectedState(e.target.value); setSelectedDistrict(''); }} className="px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
                <option value="">All States</option>
-               <option value="maharashtra">Maharashtra</option>
-               <option value="up">Uttar Pradesh</option>
-               <option value="delhi">Delhi</option>
-               <option value="karnataka">Karnataka</option>
-               <option value="kashmir">Jammu & Kashmir</option>
-               <option value="ap">Andhra Pradesh</option>
-               <option value="telangana">Telangana</option>
+               {Object.keys(indiaLocations).map(state => (
+                 <option key={state} value={state}>{state}</option>
+               ))}
              </select>
              
-             <select value={selectedDistrict} onChange={e => setSelectedDistrict(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
+             <select value={selectedDistrict} onChange={e => { setSelectedDistrict(e.target.value); setSelectedMandal(''); }} className="px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
                <option value="">All Districts</option>
-               <option value="mumbai">Mumbai</option>
-               <option value="pune">Pune</option>
-               <option value="lucknow">Lucknow</option>
-               <option value="bangalore">Bangalore</option>
-               <option value="srinagar">Srinagar</option>
-               <option value="hyderabad">Hyderabad</option>
-               <option value="vizag">Vizag</option>
+               {selectedState && indiaLocations[selectedState]?.map(district => (
+                 <option key={district} value={district}>{district}</option>
+               ))}
              </select>
 
              <select value={selectedMandal} onChange={e => setSelectedMandal(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
                <option value="">All Mandals</option>
-               <option value="mandal-1">Mandal 1</option>
-               <option value="mandal-2">Mandal 2</option>
-               <option value="mandal-3">Mandal 3</option>
+               {selectedDistrict && districtMandals[selectedDistrict]?.map(mandal => (
+                 <option key={mandal} value={mandal}>{mandal}</option>
+               ))}
              </select>
 
              <select value={selectedAmount} onChange={e => setSelectedAmount(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
