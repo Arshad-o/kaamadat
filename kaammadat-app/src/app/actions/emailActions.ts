@@ -37,6 +37,9 @@ export async function sendOTP(email: string) {
         user: GMAIL_USER,
         pass: GMAIL_APP_PASSWORD,
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     // Dispatch the email — include the sequence ID in the subject so user can identify which code is latest
@@ -156,6 +159,9 @@ export async function sendPaymentReceiptEmail(
         user: GMAIL_USER,
         pass: GMAIL_APP_PASSWORD,
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     const mailOptions = {
