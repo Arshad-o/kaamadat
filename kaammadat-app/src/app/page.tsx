@@ -167,6 +167,15 @@ export default function Home() {
           </Link>
         </div>
       </main>
+
+      {/* Floating Microphone Assistant */}
+      <button 
+        onClick={() => alert("Voice assistant starting... (Feature in development)")}
+        className="absolute bottom-8 right-8 w-14 h-14 bg-gradient-to-tr from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-2xl text-white shadow-[0_8px_30px_rgb(249,115,22,0.4)] hover:shadow-[0_8px_40px_rgb(249,115,22,0.6)] hover:-translate-y-1 transition-all cursor-pointer z-50 border-2 border-white/50 animate-[pulse_4s_infinite]"
+        title="Kaammadat Voice Assistant"
+      >
+        🎙️
+      </button>
     </div>
   );
 }
