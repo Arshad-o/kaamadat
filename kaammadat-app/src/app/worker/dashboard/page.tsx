@@ -14,7 +14,6 @@ export default function WorkerDashboard() {
   const [workPhotos, setWorkPhotos] = useState<any[]>([]);
   const [userLocation, setUserLocation] = useState('');
   const [localJobsCount, setLocalJobsCount] = useState(0);
-
   // Local Filtering State
   const [selectedState, setSelectedState] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
@@ -257,27 +256,6 @@ export default function WorkerDashboard() {
 
       </main>
 
-      {/* Fixed Floating Action Buttons — stay on screen while scrolling */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-        {/* Work Photos / Portfolio */}
-        <Link href="/worker/profile">
-          <div
-            className="bg-orange-500 hover:bg-orange-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center cursor-pointer transition transform hover:scale-110 border-2 border-white"
-            title="My Work Photos & Portfolio"
-          >
-            <span className="text-2xl">📸</span>
-          </div>
-        </Link>
-        {/* Work Statistics & History */}
-        <Link href="/worker/statistics">
-          <div
-            className="bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center cursor-pointer transition transform hover:scale-110 border-2 border-white"
-            title="Work Statistics & History"
-          >
-            <span className="text-2xl">📊</span>
-          </div>
-        </Link>
-      </div>
 
       {/* Reusable Premium Logout Modal Confirmation */}
       <LogoutModal 

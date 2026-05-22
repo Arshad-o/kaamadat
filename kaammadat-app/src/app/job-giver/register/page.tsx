@@ -6,6 +6,8 @@ import { useLanguage } from '@/context/LanguageContext';
 import { registerUser } from '@/app/actions/userActions';
 import { indiaLocations } from '@/data/indiaLocations';
 import { districtMandals } from '@/data/mandals';
+import { verifyMandalInternet, addCustomMandal, getCustomMandals } from '@/app/actions/mandalActions';
+import { useEffect } from 'react';
 
 export default function JobGiverRegister() {
   const { t } = useLanguage();
@@ -28,6 +30,16 @@ export default function JobGiverRegister() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const [customMandalsDb, setCustomMandalsDb] = useState<Record<string, string[]>>({});
+  const [customMandalInput, setCustomMandalInput] = useState('');
+  const [isVerifyingMandal, setIsVerifyingMandal] = useState(false);
+  const [mandalVerificationMsg, setMandalVerificationMsg] = useState({ text: '', type: '' });
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
+
+  useEffect(() => {
+    getCustomMandals().then(setCustomMandalsDb);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -217,14 +229,78 @@ export default function JobGiverRegister() {
                 ))}
               </select>
             </div>
-            <div>
+            <div className="col-span-1 sm:col-span-3">
               <label className="block text-sm font-bold text-gray-700 mb-1">Mandal</label>
               <select value={selectedMandal} onChange={e => setSelectedMandal(e.target.value)} disabled={!selectedDistrict} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 outline-none text-sm font-medium disabled:opacity-50">
                 <option value="">Select Mandal</option>
-                {selectedDistrict && districtMandals[selectedDistrict]?.map(mandal => (
-                  <option key={mandal} value={mandal}>{mandal}</option>
-                ))}
+                {selectedDistrict && (() => {
+                  const staticM = districtMandals[selectedDistrict] || [];
+                  const customM = customMandalsDb[selectedDistrict] || [];
+                  const allM = Array.from(new Set([...staticM, ...customM])).sort();
+                  return allM.map(mandal => (
+                    <option key={mandal} value={mandal}>{mandal}</option>
+                  ));
+                })()}
+                {selectedDistrict && <option value="Other" className="font-bold text-green-700 bg-green-50">➕ Other (Add New)</option>}
               </select>
+
+              {selectedMandal === 'Other' && (
+                <div className="bg-green-50 border border-green-200 p-4 rounded-xl mt-2 animate-[fade-in_0.3s_ease-out]">
+                  <label className="block text-sm font-bold text-green-800 mb-2">Dictate or Type your Mandal</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={customMandalInput}
+                      onChange={(e) => setCustomMandalInput(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-lg border border-green-300 focus:ring-2 focus:ring-green-500 outline-none text-sm"
+                      placeholder="E.g. Koregaon Park"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setIsVoiceListening(true);
+                        setTimeout(() => {
+                           setCustomMandalInput("Aundh"); // Simulated voice input
+                           setIsVoiceListening(false);
+                        }, 2500);
+                      }}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition border border-green-300 ${isVoiceListening ? 'bg-red-500 text-white animate-pulse border-red-500' : 'bg-white text-green-700 hover:bg-green-100'}`}
+                      title="Speak"
+                    >
+                      🎙️
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={async () => {
+                        if(!customMandalInput) return;
+                        setIsVerifyingMandal(true);
+                        setMandalVerificationMsg({ text: 'Verifying on internet...', type: 'info' });
+                        const res = await verifyMandalInternet(selectedDistrict, customMandalInput);
+                        if (res.verified) {
+                          await addCustomMandal(selectedDistrict, customMandalInput);
+                          const updated = await getCustomMandals();
+                          setCustomMandalsDb(updated);
+                          setSelectedMandal(customMandalInput);
+                          setMandalVerificationMsg({ text: '', type: '' });
+                          setCustomMandalInput('');
+                        } else {
+                          setMandalVerificationMsg({ text: res.message, type: 'error' });
+                        }
+                        setIsVerifyingMandal(false);
+                      }}
+                      disabled={isVerifyingMandal || !customMandalInput}
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-4 rounded-lg font-bold text-sm disabled:opacity-50"
+                    >
+                      {isVerifyingMandal ? '...' : 'Verify'}
+                    </button>
+                  </div>
+                  {mandalVerificationMsg.text && (
+                    <p className={`text-xs mt-2 font-bold ${mandalVerificationMsg.type === 'error' ? 'text-red-500' : 'text-blue-500'}`}>
+                      {mandalVerificationMsg.text}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

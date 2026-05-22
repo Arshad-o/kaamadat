@@ -21,6 +21,7 @@ function ForgotPasswordContent() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [simulatedOtp, setSimulatedOtp] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // References for automatic OTP box switching
   const inputRefs = [
@@ -284,26 +285,46 @@ function ForgotPasswordContent() {
 
               <div>
                 <label className="block text-sm font-bold mb-1">Establish New Password</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 outline-none transition font-medium ${getInputClass()}`}
-                  placeholder="Min 6 characters"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className={`w-full px-4 py-3 pr-12 rounded-lg border focus:ring-2 outline-none transition font-medium ${getInputClass()}`}
+                    placeholder="Min 6 characters"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 p-2 focus:outline-none"
+                    title={showPassword ? "Hide Password" : "Show Password"}
+                  >
+                    {showPassword ? "🙈" : "👁️"}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-bold mb-1">Confirm New Password</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 outline-none transition font-medium ${getInputClass()}`}
-                  placeholder="Repeat new password"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`w-full px-4 py-3 pr-12 rounded-lg border focus:ring-2 outline-none transition font-medium ${getInputClass()}`}
+                    placeholder="Repeat new password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 p-2 focus:outline-none"
+                    title={showPassword ? "Hide Password" : "Show Password"}
+                  >
+                    {showPassword ? "🙈" : "👁️"}
+                  </button>
+                </div>
               </div>
 
               <button
