@@ -57,7 +57,7 @@ export async function postJob(formData: FormData) {
     const newJob = {
       id: Date.now(),
       title: title,
-      giver: "Anand Sharma", // Hardcoded mock user for now
+      giver: (formData.get('giverName') as string) || 'Unknown',
       location: location,
       date: date,
       salary: parseInt(salary),

@@ -7,6 +7,8 @@ import { sendPaymentReceiptEmail } from '@/app/actions/emailActions';
 import PaymentModal from '@/components/PaymentModal';
 import { playNotificationSound } from '@/utils/playSound';
 import IndiaMapBackground from '@/components/IndiaMapBackground';
+import { indiaLocations } from '@/data/indiaLocations';
+import { districtMandals } from '@/data/mandals';
 
 export default function PostJob() {
   const { t } = useLanguage();
@@ -33,6 +35,10 @@ export default function PostJob() {
   const [endDate, setEndDate] = useState('');
   const [salary, setSalary] = useState('');
   const [accommodation, setAccommodation] = useState('Yes, Food & Room');
+  
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedMandal, setSelectedMandal] = useState('');
 
   // Touched state tracker
   const [touched, setTouched] = useState<{[key: string]: boolean}>({});
@@ -47,7 +53,7 @@ export default function PostJob() {
   const isStartDateInvalid = touched.startDate && !startDate;
   const isEndDateInvalid = touched.endDate && (!endDate || (startDate && new Date(endDate) < new Date(startDate)));
   const isSalaryInvalid = touched.salary && (!salary || parseInt(salary) <= 0);
-  const isLocationInvalid = touched.location && (!locationText.trim() || locationText.length < 5);
+  const isLocationInvalid = touched.location && (!selectedState || !selectedDistrict || !selectedMandal || !locationText.trim() || locationText.length < 5);
 
   const isFormValid = () => {
     if (title === 'Other' && !customTitle.trim()) return false;
@@ -56,7 +62,7 @@ export default function PostJob() {
     if (!endDate) return false;
     if (startDate && endDate && new Date(endDate) < new Date(startDate)) return false;
     if (!salary || parseInt(salary) <= 0) return false;
-    if (!locationText.trim() || locationText.length < 5) return false;
+    if (!selectedState || !selectedDistrict || !selectedMandal || !locationText.trim() || locationText.length < 5) return false;
     return true;
   };
 
@@ -120,7 +126,10 @@ export default function PostJob() {
       formData.append('endDate', endDate);
       formData.append('salary', salary);
       formData.append('accommodation', accommodation);
-      formData.append('location', locationText);
+      const giverName = localStorage.getItem('kaammadat_user_name') || 'Unknown';
+      formData.append('giverName', giverName);
+      const fullLocation = `${locationText}, ${selectedMandal}, ${selectedDistrict}, ${selectedState}`;
+      formData.append('location', fullLocation);
       if (coords) {
         formData.append('lat', coords.lat.toString());
         formData.append('lng', coords.lng.toString());
@@ -315,8 +324,41 @@ export default function PostJob() {
             </div>
           </div>
 
-          {/* Address location */}
+          {/* Location Area */}
           <div>
+            {/* State, District, Mandal selection */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">State</label>
+                <select value={selectedState} onChange={e => { setSelectedState(e.target.value); setSelectedDistrict(''); setSelectedMandal(''); }} className="w-full px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold">
+                  <option value="">Select State</option>
+                  {Object.keys(indiaLocations).map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">District</label>
+                <select value={selectedDistrict} onChange={e => { setSelectedDistrict(e.target.value); setSelectedMandal(''); }} disabled={!selectedState} className="w-full px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold disabled:opacity-50">
+                  <option value="">Select District</option>
+                  {selectedState && indiaLocations[selectedState]?.map(district => (
+                    <option key={district} value={district}>{district}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Mandal</label>
+                <select value={selectedMandal} onChange={e => setSelectedMandal(e.target.value)} disabled={!selectedDistrict} className="w-full px-3 py-2 rounded-xl border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold disabled:opacity-50">
+                  <option value="">Select Mandal</option>
+                  {selectedDistrict && districtMandals[selectedDistrict]?.map(mandal => (
+                    <option key={mandal} value={mandal}>{mandal}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="flex justify-between items-center mb-1">
               <label className={`block text-sm font-bold ${isLocationInvalid ? 'text-red-650' : 'text-gray-700'}`}>
                 {t('address')} {t('location')}
@@ -347,7 +389,7 @@ export default function PostJob() {
               placeholder="Enter full work map address or click live GPS above..." 
             ></textarea>
             {isLocationInvalid && (
-              <p className="text-xs text-red-600 font-extrabold mt-1">⚠️ Full work site address (at least 5 letters) is required.</p>
+              <p className="text-xs text-red-600 font-extrabold mt-1">⚠️ Please select State, District, Mandal and enter a detailed address (min 5 letters).</p>
             )}
             {coords && (
               <>

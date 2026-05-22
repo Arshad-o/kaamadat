@@ -5,19 +5,28 @@ import { useLanguage } from '@/context/LanguageContext';
 import LogoutModal from '@/components/LogoutModal';
 import { getJobs } from '@/app/actions/jobActions';
 import { indiaLocations } from '@/data/indiaLocations';
-import { districtMandals } from '@/data/apMandals';
+import { districtMandals } from '@/data/mandals';
 
 export default function WorkerDashboard() {
   const { t } = useLanguage();
   const [workerName, setWorkerName] = useState('Rahul Kumar');
   const [showLogout, setShowLogout] = useState(false);
   const [workPhotos, setWorkPhotos] = useState<any[]>([]);
-  
+  const [userLocation, setUserLocation] = useState('');
+  const [localJobsCount, setLocalJobsCount] = useState(0);
+
   // Local Filtering State
   const [selectedState, setSelectedState] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedMandal, setSelectedMandal] = useState('');
   const [selectedAmount, setSelectedAmount] = useState('');
+  
+  // Applied filters for Search button
+  const [appliedState, setAppliedState] = useState('');
+  const [appliedDistrict, setAppliedDistrict] = useState('');
+  const [appliedMandal, setAppliedMandal] = useState('');
+  const [appliedAmount, setAppliedAmount] = useState('');
+
   const [jobs, setJobs] = useState<any[]>([]);
 
   useEffect(() => {
@@ -25,9 +34,17 @@ export default function WorkerDashboard() {
     if (savedName) setWorkerName(savedName);
     const savedPhotos = localStorage.getItem('kaammadat_work_photos');
     if (savedPhotos) setWorkPhotos(JSON.parse(savedPhotos));
+    const savedLocation = localStorage.getItem('kaammadat_user_location');
+    if (savedLocation) setUserLocation(savedLocation);
 
     // Fetch jobs for local filtering
-    getJobs().then(data => setJobs(data));
+    getJobs().then(data => {
+      setJobs(data);
+      if (savedLocation) {
+        const count = data.filter((j: any) => j.location.toLowerCase().includes(savedLocation.toLowerCase())).length;
+        setLocalJobsCount(count);
+      }
+    });
   }, []);
 
   const executeLogout = () => {
@@ -39,21 +56,41 @@ export default function WorkerDashboard() {
     window.location.href = '/';
   };
 
+  // Apply Search
+  const handleSearch = () => {
+    setAppliedState(selectedState);
+    setAppliedDistrict(selectedDistrict);
+    setAppliedMandal(selectedMandal);
+    setAppliedAmount(selectedAmount);
+  };
+
+  const handleClearFilters = () => {
+    setSelectedState('');
+    setSelectedDistrict('');
+    setSelectedMandal('');
+    setSelectedAmount('');
+    setAppliedState('');
+    setAppliedDistrict('');
+    setAppliedMandal('');
+    setAppliedAmount('');
+  };
+
   // Filter Jobs
   const filteredJobs = jobs.filter(job => {
     let match = true;
     const loc = job.location.toLowerCase();
     
-    if (selectedState && !loc.includes(selectedState.toLowerCase())) match = false;
-    if (selectedDistrict && !loc.includes(selectedDistrict.toLowerCase())) match = false;
-    if (selectedMandal && !loc.includes(selectedMandal.toLowerCase())) match = false;
+    if (appliedState && !loc.includes(appliedState.toLowerCase())) match = false;
+    if (appliedDistrict && !loc.includes(appliedDistrict.toLowerCase())) match = false;
+    if (appliedMandal && !loc.includes(appliedMandal.toLowerCase())) match = false;
     
-    if (selectedAmount) {
+    if (appliedAmount) {
       const sal = parseInt(job.salary);
-      if (selectedAmount === '100-500' && (sal < 100 || sal > 500)) match = false;
-      else if (selectedAmount === '500-1000' && (sal < 500 || sal > 1000)) match = false;
-      else if (selectedAmount === '1000-5000' && (sal < 1000 || sal > 5000)) match = false;
-      else if (selectedAmount === '5000-10000' && (sal < 5000 || sal > 10000)) match = false;
+      // Added roughly 20% tolerance to boundaries to include approximate/nearer amounts
+      if (appliedAmount === '100-500' && (sal < 80 || sal > 600)) match = false;
+      else if (appliedAmount === '500-1000' && (sal < 400 || sal > 1200)) match = false;
+      else if (appliedAmount === '1000-5000' && (sal < 800 || sal > 6000)) match = false;
+      else if (appliedAmount === '5000-10000' && (sal < 4000 || sal > 12000)) match = false;
     }
     
     return match;
@@ -77,6 +114,22 @@ export default function WorkerDashboard() {
 
       <main className="p-4 max-w-4xl mx-auto flex flex-col gap-6 mt-6">
         
+        {/* Local Notification Banner */}
+        {localJobsCount > 0 && (
+          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-4 shadow-lg text-white flex justify-between items-center animate-[bounce_1s_ease-in-out]">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🔔</span>
+              <div>
+                <h3 className="font-black text-lg">Local Jobs Available!</h3>
+                <p className="text-sm font-medium opacity-90">There are {localJobsCount} new jobs posted right in your area.</p>
+              </div>
+            </div>
+            <button onClick={() => { setAppliedState(''); setAppliedDistrict(''); setAppliedMandal(userLocation.split(',')[0].trim()); }} className="bg-white text-green-700 font-bold px-4 py-2 rounded-xl text-sm shadow hover:bg-gray-50 transition cursor-pointer">
+              View Now
+            </button>
+          </div>
+        )}
+
         {/* Welcome Animation Area */}
         <div className="bg-white rounded-2xl p-6 shadow-md border border-orange-100 flex items-center gap-4 animate-[pulse_4s_ease-in-out_infinite]">
           <div className="text-4xl">👋</div>
@@ -134,12 +187,21 @@ export default function WorkerDashboard() {
                <option value="5000-10000">₹5,000 - ₹10,000</option>
              </select>
            </div>
+           
+           <div className="mb-6 flex justify-center">
+             <button 
+               onClick={handleSearch}
+               className="bg-orange-500 text-white font-bold px-8 py-3 rounded-xl shadow-md hover:bg-orange-600 transition cursor-pointer flex items-center gap-2"
+             >
+               <span>🔍</span> Search Local Jobs
+             </button>
+           </div>
 
            <div className="flex flex-col gap-4">
              {filteredJobs.length === 0 ? (
                 <div className="p-8 text-center bg-orange-50 rounded-xl border border-orange-100">
                   <p className="text-orange-800 font-bold">No local works found for these filters.</p>
-                  <button onClick={() => { setSelectedState(''); setSelectedDistrict(''); setSelectedMandal(''); setSelectedAmount(''); }} className="mt-2 text-sm text-orange-600 font-bold hover:underline cursor-pointer">Clear Filters</button>
+                  <button onClick={handleClearFilters} className="mt-2 text-sm text-orange-600 font-bold hover:underline cursor-pointer">Clear Filters</button>
                 </div>
              ) : (
                 filteredJobs.slice(0, 5).map(job => {
@@ -193,57 +255,29 @@ export default function WorkerDashboard() {
            </div>
         </section>
 
-        {/* Loyalty Cards Section */}
-        <section className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-          <div className="absolute right-0 top-0 opacity-10 text-9xl -mt-4 mr-4">⭐</div>
-          <h3 className="text-xl font-bold mb-1">{t('loyalty_card')}</h3>
-          <p className="text-sm text-gray-300 mb-4">Your current tier and benefits</p>
-          
-          <div className="bg-gradient-to-br from-gray-300 to-gray-400 w-full max-w-sm rounded-xl p-4 shadow-inner text-gray-900 border border-gray-400">
-             <div className="flex justify-between items-start">
-                <span className="font-bold tracking-widest uppercase">Silver Tier</span>
-                <span className="text-xs font-bold">KAAMMADAT</span>
-             </div>
-             <div className="mt-6">
-                <p className="font-mono text-lg">**** **** **** 1029</p>
-                <div className="flex justify-between items-end mt-2">
-                   <p className="text-sm font-semibold uppercase">{workerName}</p>
-                   <p className="text-xs font-bold bg-white px-2 py-1 rounded">3% OFF</p>
-                </div>
-             </div>
-          </div>
-        </section>
-
-        {/* Work Portfolio Preview */}
-        <section className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-black text-gray-800">📸 My Work Portfolio</h3>
-            <Link href="/worker/profile" className="text-orange-500 text-xs font-extrabold hover:underline">
-              {workPhotos.length > 0 ? `View All (${workPhotos.length})` : '+ Add Photos'}
-            </Link>
-          </div>
-          {workPhotos.length === 0 ? (
-            <Link href="/worker/profile">
-              <div className="border-2 border-dashed border-orange-200 rounded-xl p-6 text-center cursor-pointer hover:bg-orange-50 transition">
-                <p className="text-3xl mb-2">📷</p>
-                <p className="text-gray-500 font-bold text-sm">No work photos yet</p>
-                <p className="text-xs text-orange-500 font-semibold mt-1">Tap to upload your first work photo →</p>
-              </div>
-            </Link>
-          ) : (
-            <div className="grid grid-cols-3 gap-2">
-              {workPhotos.slice(0, 6).map((photo: any) => (
-                <Link key={photo.id} href="/worker/profile">
-                  <div className="h-24 rounded-xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer hover:opacity-90 transition">
-                    <img src={photo.dataUrl} alt={photo.desc} className="w-full h-full object-cover" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-
       </main>
+
+      {/* Fixed Floating Action Buttons — stay on screen while scrolling */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+        {/* Work Photos / Portfolio */}
+        <Link href="/worker/profile">
+          <div
+            className="bg-orange-500 hover:bg-orange-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center cursor-pointer transition transform hover:scale-110 border-2 border-white"
+            title="My Work Photos & Portfolio"
+          >
+            <span className="text-2xl">📸</span>
+          </div>
+        </Link>
+        {/* Work Statistics & History */}
+        <Link href="/worker/statistics">
+          <div
+            className="bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center cursor-pointer transition transform hover:scale-110 border-2 border-white"
+            title="Work Statistics & History"
+          >
+            <span className="text-2xl">📊</span>
+          </div>
+        </Link>
+      </div>
 
       {/* Reusable Premium Logout Modal Confirmation */}
       <LogoutModal 

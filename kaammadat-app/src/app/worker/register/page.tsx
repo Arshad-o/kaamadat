@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { registerUser } from '@/app/actions/userActions';
+import { indiaLocations } from '@/data/indiaLocations';
+import { districtMandals } from '@/data/mandals';
 
 export default function WorkerRegister() {
   const { t } = useLanguage();
@@ -18,6 +20,10 @@ export default function WorkerRegister() {
     password: '',
     terms: false,
   });
+
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedMandal, setSelectedMandal] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -36,8 +42,8 @@ export default function WorkerRegister() {
     e.preventDefault();
     setError('');
 
-    if (!formData.name || !formData.mobile || !formData.email || !formData.aadhar || !formData.address || !formData.password) {
-      setError('Please fill in all fields.');
+    if (!formData.name || !formData.mobile || !formData.email || !formData.aadhar || !formData.address || !formData.password || !selectedState || !selectedDistrict || !selectedMandal) {
+      setError('Please fill in all fields including location details.');
       return;
     }
 
@@ -75,6 +81,7 @@ export default function WorkerRegister() {
         localStorage.setItem('kaammadat_user_name', formData.name);
         localStorage.setItem('kaammadat_user_mobile', formData.mobile);
         localStorage.setItem('kaammadat_user_type', 'worker');
+        localStorage.setItem('kaammadat_user_location', `${selectedMandal}, ${selectedDistrict}, ${selectedState}`);
 
         if (result.otpResult?.simulated && result.otpResult?.otp) {
           localStorage.setItem('kaammadat_simulated_otp', result.otpResult.otp);
@@ -178,6 +185,36 @@ export default function WorkerRegister() {
               placeholder="Min 6 characters" 
               required
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">State</label>
+              <select value={selectedState} onChange={e => { setSelectedState(e.target.value); setSelectedDistrict(''); setSelectedMandal(''); }} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 outline-none text-sm font-medium">
+                <option value="">Select State</option>
+                {Object.keys(indiaLocations).map(state => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">District</label>
+              <select value={selectedDistrict} onChange={e => { setSelectedDistrict(e.target.value); setSelectedMandal(''); }} disabled={!selectedState} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 outline-none text-sm font-medium disabled:opacity-50">
+                <option value="">Select District</option>
+                {selectedState && indiaLocations[selectedState]?.map(district => (
+                  <option key={district} value={district}>{district}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Mandal</label>
+              <select value={selectedMandal} onChange={e => setSelectedMandal(e.target.value)} disabled={!selectedDistrict} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 outline-none text-sm font-medium disabled:opacity-50">
+                <option value="">Select Mandal</option>
+                {selectedDistrict && districtMandals[selectedDistrict]?.map(mandal => (
+                  <option key={mandal} value={mandal}>{mandal}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>

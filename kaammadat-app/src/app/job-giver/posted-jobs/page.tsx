@@ -13,6 +13,35 @@ interface Applicant {
   appliedAt: string;
 }
 
+// Compute real stats for a worker from shared localStorage applications
+function computeWorkerStats(workerEmail: string, allJobs: any[]) {
+  try {
+    const raw = localStorage.getItem('kaammadat_applications');
+    if (!raw) return { thisMonth: 0, total: 0 };
+    const allApps = JSON.parse(raw);
+    const workerApps = allApps.filter((a: any) => a.workerEmail === workerEmail);
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    let thisMonth = 0;
+    let total = 0;
+    workerApps.forEach((app: any) => {
+      const job = allJobs.find((j: any) => j.id === app.jobId);
+      if (!job) return;
+      try {
+        const parts = job.date.split(' - ');
+        const start = new Date(`${parts[0]}, ${currentYear}`);
+        const end = new Date(`${parts[1]}, ${currentYear}`);
+        const days = Math.max(0, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
+        total += days;
+        if (start.getMonth() === currentMonth) thisMonth += days;
+      } catch (e) {}
+    });
+    return { thisMonth, total };
+  } catch (e) {
+    return { thisMonth: 0, total: 0 };
+  }
+}
+
 export default function PostedJobs() {
   const { t } = useLanguage();
   const [jobs, setJobs] = useState<any[]>([]);
@@ -142,14 +171,49 @@ export default function PostedJobs() {
                                 </div>
                                 <div className="text-right">
                                   <p className="text-xs text-blue-600 font-bold">{applicant.workerPhotos.length} 📸</p>
-                                  <p className="text-xs text-gray-400">{isApplicantExpanded ? '▲ Hide' : '▼ View Portfolio'}</p>
+                                  <p className="text-xs text-gray-400">{isApplicantExpanded ? '▲ Hide' : '▼ View Profile'}</p>
                                 </div>
                               </div>
 
-                              {/* Applicant Work Photos */}
-                              {isApplicantExpanded && (
-                                <div className="border-t border-gray-100 p-4">
-                                  <p className="text-xs font-extrabold text-gray-500 uppercase mb-3">Applied: {new Date(applicant.appliedAt).toLocaleString('en-IN')}</p>
+                              {/* Applicant Work Photos & Stats */}
+                              {isApplicantExpanded && (() => {
+                                const workerStats = computeWorkerStats(applicant.workerEmail, jobs);
+                                return (
+                                <div className="border-t border-gray-100 p-4 bg-gray-50/50">
+                                  <div className="flex justify-between items-start mb-4 border-b border-gray-100 pb-4">
+                                    <div>
+                                      <p className="text-xs font-extrabold text-gray-500 uppercase">Worker Statistics (Real)</p>
+                                      <div className="mt-2 flex gap-4">
+                                        <div className="bg-white p-2 px-3 rounded-lg border border-gray-200 shadow-sm text-center">
+                                          <p className="text-xl font-black text-green-600">{workerStats.thisMonth}</p>
+                                          <p className="text-[10px] font-bold text-gray-500 uppercase">This Month</p>
+                                        </div>
+                                        <div className="bg-white p-2 px-3 rounded-lg border border-gray-200 shadow-sm text-center">
+                                          <p className="text-xl font-black text-blue-600">{workerStats.total}</p>
+                                          <p className="text-[10px] font-bold text-gray-500 uppercase">Total Days</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-xs font-extrabold text-gray-500 uppercase mb-1">Rating</p>
+                                      {workerStats.total > 0 ? (
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-1 inline-flex items-center gap-1 shadow-sm">
+                                          <span className="text-yellow-500 text-lg">⭐</span>
+                                          <span className="font-black text-yellow-700 text-lg">New</span>
+                                        </div>
+                                      ) : (
+                                        <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 inline-flex items-center gap-1 shadow-sm">
+                                          <span className="text-gray-400 text-sm font-bold">No ratings yet</span>
+                                        </div>
+                                      )}
+                                      <p className="text-[10px] text-gray-400 mt-1 font-semibold">{workerStats.total} days worked total</p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex justify-between items-center mb-3">
+                                    <p className="text-xs font-extrabold text-gray-500 uppercase">Portfolio ({applicant.workerPhotos.length} Photos)</p>
+                                    <p className="text-[10px] font-extrabold text-gray-400 uppercase">Applied: {new Date(applicant.appliedAt).toLocaleString('en-IN')}</p>
+                                  </div>
                                   {applicant.workerPhotos.length === 0 ? (
                                     <p className="text-sm text-gray-400 font-medium text-center py-4">This worker hasn't uploaded any work photos yet.</p>
                                   ) : (
@@ -163,7 +227,8 @@ export default function PostedJobs() {
                                     </div>
                                   )}
                                 </div>
-                              )}
+                                );
+                              })()}
                             </div>
                           );
                         })}
