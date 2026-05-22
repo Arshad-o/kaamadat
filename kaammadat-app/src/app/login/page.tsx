@@ -12,6 +12,7 @@ export default function UniversalLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,16 +129,26 @@ export default function UniversalLogin() {
                   Forgot Password?
                 </Link>
               </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`w-full px-4 py-3.5 rounded-xl border border-white/60 text-slate-900 bg-white/50 backdrop-blur-sm focus:bg-white focus:ring-4 outline-none transition-all font-semibold shadow-sm ${
-                  role === 'worker' ? 'focus:ring-orange-500/20 focus:border-orange-500' : 'focus:ring-green-500/20 focus:border-green-500'
-                }`}
-                placeholder="Enter password"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`w-full px-4 py-3.5 pr-12 rounded-xl border border-white/60 text-slate-900 bg-white/50 backdrop-blur-sm focus:bg-white focus:ring-4 outline-none transition-all font-semibold shadow-sm ${
+                    role === 'worker' ? 'focus:ring-orange-500/20 focus:border-orange-500' : 'focus:ring-green-500/20 focus:border-green-500'
+                  }`}
+                  placeholder="Enter password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 p-2 focus:outline-none"
+                  title={showPassword ? "Hide Password" : "Show Password"}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
 
             <button

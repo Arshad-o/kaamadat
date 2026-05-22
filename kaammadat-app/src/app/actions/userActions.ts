@@ -252,6 +252,7 @@ export async function adminSearchUsers(query: string) {
     return users.filter((u: any) =>
       u.type !== 'admin' &&
       (
+        (u.email && u.email.toLowerCase().includes(q)) ||
         (u.mobile && u.mobile.includes(q)) ||
         (u.aadhar && u.aadhar.includes(q))
       )

@@ -270,7 +270,7 @@ export default function AdminDashboard() {
       {view === 'users' && (
         <div className="p-4 md:p-8 max-w-3xl mx-auto">
           <h2 className="text-2xl font-black text-slate-800 mb-2">👥 User Management</h2>
-          <p className="text-slate-500 text-sm mb-6 font-medium">Search any registered user by their <strong>Mobile Number</strong> or <strong>Aadhar Number</strong>.</p>
+          <p className="text-slate-500 text-sm mb-6 font-medium">Search any registered user by their <strong>Email ID</strong>, <strong>Mobile Number</strong> or <strong>Aadhar Number</strong>.</p>
 
           {/* Search Bar */}
           <div className="flex gap-3 mb-6">
@@ -279,7 +279,7 @@ export default function AdminDashboard() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              placeholder="Enter Mobile Number or Aadhar Number..."
+              placeholder="Enter Email ID, Mobile, or Aadhar Number..."
               className="flex-1 px-5 py-3.5 rounded-xl border-2 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 text-gray-800 bg-white outline-none font-medium transition text-sm"
             />
             <button
@@ -314,7 +314,7 @@ export default function AdminDashboard() {
                 <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 shadow-sm">
                   <p className="text-4xl mb-2">🔍</p>
                   <p className="font-bold text-slate-700 text-lg">No Users Found</p>
-                  <p className="text-slate-400 text-sm mt-1">No match for "<strong>{searchQuery}</strong>". Try a different mobile or Aadhar number.</p>
+                  <p className="text-slate-400 text-sm mt-1">No match for "<strong>{searchQuery}</strong>". Try a different email, mobile, or Aadhar number.</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
