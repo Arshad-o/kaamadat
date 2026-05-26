@@ -1,15 +1,27 @@
 "use server";
-import fs from 'fs';
-import path from 'path';
-
-const fraudFilePath = path.join(process.cwd(), 'fraud_reports.json');
+import { supabase } from '@/utils/supabase';
 
 export async function getFraudReports() {
   try {
-    if (!fs.existsSync(fraudFilePath)) return [];
-    const data = fs.readFileSync(fraudFilePath, 'utf8');
-    return JSON.parse(data);
-  } catch {
+    const { data, error } = await supabase
+      .from('fraud_reports')
+      .select('*')
+      .order('reported_at', { ascending: false });
+
+    if (error) throw error;
+
+    return (data || []).map((r: any) => ({
+      id: r.id,
+      type: r.type,
+      workerName: r.worker_name,
+      workerEmail: r.worker_email,
+      job: r.job,
+      reason: r.reason,
+      status: r.status,
+      reportedAt: r.reported_at,
+    }));
+  } catch (error) {
+    console.error('Error fetching fraud reports:', error);
     return [];
   }
 }
@@ -21,22 +33,18 @@ export async function saveFraudReport(report: {
   reason: string;
 }) {
   try {
-    let reports: any[] = [];
-    if (fs.existsSync(fraudFilePath)) {
-      const data = fs.readFileSync(fraudFilePath, 'utf8');
-      reports = JSON.parse(data);
-    }
-    reports.push({
-      id: Date.now(),
-      type: 'Fraud',
-      workerName: report.workerName,
-      workerEmail: report.workerEmail,
-      job: report.jobTitle,
-      reason: report.reason,
-      status: 'Pending',
-      reportedAt: new Date().toISOString(),
-    });
-    fs.writeFileSync(fraudFilePath, JSON.stringify(reports, null, 2), 'utf8');
+    const { error } = await supabase
+      .from('fraud_reports')
+      .insert([{
+        type: 'Fraud',
+        worker_name: report.workerName,
+        worker_email: report.workerEmail,
+        job: report.jobTitle,
+        reason: report.reason,
+        status: 'Pending',
+      }]);
+
+    if (error) throw error;
     return { success: true };
   } catch (err: any) {
     console.error('Error saving fraud report:', err);

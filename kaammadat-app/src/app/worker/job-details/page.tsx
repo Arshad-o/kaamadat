@@ -7,6 +7,7 @@ import { sendPaymentReceiptEmail } from '@/app/actions/emailActions';
 import { playNotificationSound } from '@/utils/playSound';
 import { saveFraudReport } from '@/app/actions/fraudActions';
 import IndiaMapBackground from '@/components/IndiaMapBackground';
+import MapWrapper from '@/components/MapWrapper';
 
 export default function JobDetails() {
   const { t } = useLanguage();
@@ -170,16 +171,10 @@ export default function JobDetails() {
            </div>
            
            <div className="relative h-64 bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shadow-inner">
-              {/* Dynamic Coordinate Centered Map Embed */}
-              <iframe 
-                src={`https://maps.google.com/maps?q=${job.lat},${job.lng}&z=15&output=embed`}
-                width="100%" 
-                height="100%" 
-                style={{ border: 0 }} 
-                allowFullScreen={true} 
-                loading="lazy" 
-                referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
+              {/* Dynamic Coordinate Centered Interactive Map */}
+              <div className="absolute inset-0 z-0">
+                <MapWrapper jobs={[job]} center={[job.lat, job.lng]} zoom={15} />
+              </div>
            </div>
 
            <div className="mt-3 bg-blue-50/50 p-3 rounded-lg flex items-center justify-between text-xs font-bold text-blue-800 border border-blue-100 mb-4">

@@ -223,7 +223,7 @@ export const districtMandals: Record<string, string[]> = {
   "Yamunanagar": ["Jagadhri", "Chhachhrauli", "Bilaspur", "Radaur", "Saraswati Nagar (Mustafabad)", "Pratap Nagar (Khizrabad)"],
 
   // Himachal Pradesh
-  "Bilaspur": ["Bilaspur Sadar", "Ghumarwin", "Jhandutta", "Naina Devi ji (Swarnaghat)", "Namhol", "Bharari"],
+  "Bilaspur (HP)": ["Bilaspur Sadar", "Ghumarwin", "Jhandutta", "Naina Devi ji (Swarnaghat)", "Namhol", "Bharari"],
   "Chamba": ["Chamba", "Churah", "Pangi", "Bharmour", "Bhattiyat", "Dalhousie", "Sihunta", "Salooni", "Kakira", "Bhalei", "Dharwala"],
   "Hamirpur": ["Hamirpur", "Barsar", "Bhoranj", "Nadaun", "Sujanpur Tira", "Tauni Devi", "Dhatwal (Bijhari)", "Galore"],
   "Kangra": ["Dharamshala", "Kangra", "Palampur", "Nurpur", "Dehra", "Indora", "Jaisinghpur", "Jawali", "Khundian", "Shahpur", "Baijnath", "Fatehpur", "Nagrota Bagwan", "Baroh", "Rakkar", "Thural", "Multhan", "Jaswan (Kotla)"],
@@ -680,7 +680,7 @@ export const districtMandals: Record<string, string[]> = {
   "Hardoi": ["Hardoi", "Shahabad"],
   "Etawah": ["Etawah", "Bharthana"],
   "Gonda": ["Gonda", "Tarabganj"],
-  "Hamirpur": ["Hamirpur", "Maudaha"],
+  "Hamirpur (UP)": ["Hamirpur", "Maudaha"],
   "Mainpuri": ["Mainpuri", "Bhogaon"],
 
   // Uttarakhand

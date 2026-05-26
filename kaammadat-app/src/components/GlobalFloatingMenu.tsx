@@ -13,9 +13,11 @@ export default function GlobalFloatingMenu() {
   // Let's hide it only on the voice assistant simulated full page if needed, or just keep it everywhere.
   
   const toggleLanguage = () => {
-    const newLang = language === 'en' ? 'hi' : (language === 'hi' ? 'te' : 'en');
-    setLanguage(newLang);
+    const newLang = language === 'English' ? 'Hindi' : (language === 'Hindi' ? 'Telugu' : 'English');
+    setLanguage(newLang as any);
   };
+
+  const langLabel = language === 'English' ? 'EN' : language === 'Hindi' ? 'HI' : language === 'Telugu' ? 'TE' : language.slice(0, 2).toUpperCase();
 
   return (
     <div className="fixed bottom-6 right-6 z-[100]">
@@ -30,7 +32,7 @@ export default function GlobalFloatingMenu() {
               className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1 shadow-inner"
               title="Change Language"
             >
-              <span>🌐</span> {language.toUpperCase()}
+              <span>🌐</span> {langLabel}
             </button>
           </div>
           
