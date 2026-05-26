@@ -305,7 +305,10 @@ export default function WorkerRegister() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">{t('address')}</label>
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <label className="text-sm font-bold text-gray-700">{t('address')}</label>
+              <span className="text-xs text-orange-600 font-semibold bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">📮 Note: Type correct address for getting the card for your address by post</span>
+            </div>
             <textarea 
               name="address"
               value={formData.address}
