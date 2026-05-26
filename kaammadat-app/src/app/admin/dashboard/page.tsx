@@ -11,7 +11,8 @@ import {
 } from '@/app/actions/userActions';
 import { getFraudReports } from '@/app/actions/fraudActions';
 import { getEffectiveCardTier, CARD_TIERS, CARD_STYLES } from '@/utils/cardTier';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { adminGetAnalytics } from '@/app/actions/analyticsActions';
+import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, CartesianGrid, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
 type AdminView = 'dashboard' | 'users';
 
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
   // Real data
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
   const [loadingData, setLoadingData] = useState(true);
 
   // User management
@@ -51,12 +53,14 @@ export default function AdminDashboard() {
   const loadRealData = async () => {
     setLoadingData(true);
     try {
-      const [users, fraudReports] = await Promise.all([
+      const [users, fraudReports, analyticsData] = await Promise.all([
         adminGetAllUsers(),
         getFraudReports(),
+        adminGetAnalytics()
       ]);
       setAllUsers(users);
       setReports(fraudReports);
+      setAnalytics(analyticsData);
     } catch (e) {
       console.error('Error loading admin data:', e);
     } finally {
@@ -138,13 +142,46 @@ export default function AdminDashboard() {
   ];
   const COLORS = ['#f97316', '#16a34a'];
 
-  const districtData = [
-    { name: 'Mumbai', users: Math.max(1, Math.floor(allUsers.length * 0.35)) },
-    { name: 'Pune', users: Math.max(1, Math.floor(allUsers.length * 0.25)) },
-    { name: 'Nagpur', users: Math.max(1, Math.floor(allUsers.length * 0.15)) },
-    { name: 'Nashik', users: Math.max(1, Math.floor(allUsers.length * 0.15)) },
-    { name: 'Others', users: Math.max(1, Math.floor(allUsers.length * 0.10)) },
-  ];
+  // Process Analytics Data for Charts
+  let regData: any[] = [];
+  let jobData: any[] = [];
+  let attData: any[] = [];
+
+  if (analytics) {
+    // Process Registrations by Date
+    const regMap: Record<string, number> = {};
+    analytics.users.forEach((u: any) => {
+      const d = u.created_at ? new Date(u.created_at) : new Date();
+      const date = d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+      regMap[date] = (regMap[date] || 0) + 1;
+    });
+    // Ensure we show them in order (assuming they are fetched sequentially or sort by date)
+    regData = Object.keys(regMap).map(date => ({ date, users: regMap[date] })).slice(-7);
+
+    // Process Job Postings by Date
+    const jobMap: Record<string, number> = {};
+    analytics.jobs.forEach((j: any) => {
+      const d = j.created_at ? new Date(j.created_at) : new Date();
+      const date = d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+      jobMap[date] = (jobMap[date] || 0) + 1;
+    });
+    jobData = Object.keys(jobMap).map(date => ({ date, jobs: jobMap[date] })).slice(-7);
+
+    // Process Attendance by Date
+    const attMap: Record<string, { total: number, present: number }> = {};
+    analytics.attendance.forEach((a: any) => {
+      const dateStr = a.date ? String(a.date).substring(0, 10) : 'Unknown';
+      if (!attMap[dateStr]) attMap[dateStr] = { total: 0, present: 0 };
+      attMap[dateStr].total += (a.total_slots || 0);
+      const filled = (a.total_slots || 0) - (a.open_slots || 0);
+      attMap[dateStr].present += filled;
+    });
+    attData = Object.keys(attMap).map(date => ({ 
+      date, 
+      total: attMap[date].total, 
+      present: attMap[date].present 
+    })).slice(-7);
+  }
 
   if (!authorized) {
     return (
@@ -234,52 +271,58 @@ export default function AdminDashboard() {
              </div>
              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                
-               {/* Pie Chart */}
+               {/* Line Chart - Registrations */}
                <div className="flex flex-col items-center">
-                 <h3 className="text-slate-600 font-black mb-2 uppercase tracking-widest text-xs">User Demographics</h3>
+                 <h3 className="text-slate-600 font-black mb-2 uppercase tracking-widest text-xs">Live Registrations</h3>
                  <div className="h-64 w-full">
                    <ResponsiveContainer width="100%" height="100%">
-                     <PieChart>
-                       <Pie
-                         data={userTypeData}
-                         cx="50%"
-                         cy="50%"
-                         innerRadius={60}
-                         outerRadius={90}
-                         paddingAngle={5}
-                         dataKey="value"
-                         stroke="none"
-                       >
-                         {userTypeData.map((entry, index) => (
-                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                         ))}
-                       </Pie>
+                     <LineChart data={regData} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
+                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 'bold', fill: '#64748b' }} />
+                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 'bold', fill: '#64748b' }} allowDecimals={false} />
                        <RechartsTooltip 
                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
-                         itemStyle={{ color: '#1e293b' }}
                        />
-                     </PieChart>
+                       <Line type="monotone" dataKey="users" stroke="#f97316" strokeWidth={3} dot={{ r: 4, fill: '#f97316', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                     </LineChart>
                    </ResponsiveContainer>
-                 </div>
-                 <div className="flex gap-4 mt-2 text-sm font-bold">
-                   <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-orange-500"></div> Workers</div>
-                   <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-600"></div> Job Givers</div>
                  </div>
                </div>
 
-               {/* Bar Chart */}
+               {/* Area Chart - Job Postings */}
                <div className="flex flex-col items-center">
-                 <h3 className="text-slate-600 font-black mb-2 uppercase tracking-widest text-xs">Active Users by District</h3>
+                 <h3 className="text-slate-600 font-black mb-2 uppercase tracking-widest text-xs">Job Postings Trend</h3>
                  <div className="h-64 w-full">
                    <ResponsiveContainer width="100%" height="100%">
-                     <BarChart data={districtData} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
-                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 'bold', fill: '#64748b' }} />
-                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 'bold', fill: '#64748b' }} />
+                     <AreaChart data={jobData} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
+                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 'bold', fill: '#64748b' }} />
+                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 'bold', fill: '#64748b' }} allowDecimals={false} />
+                       <RechartsTooltip 
+                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                       />
+                       <Area type="monotone" dataKey="jobs" stroke="#16a34a" fill="#16a34a" fillOpacity={0.2} strokeWidth={3} />
+                     </AreaChart>
+                   </ResponsiveContainer>
+                 </div>
+               </div>
+
+               {/* Bar Chart - Attendance Data */}
+               <div className="flex flex-col items-center md:col-span-2">
+                 <h3 className="text-slate-600 font-black mb-2 uppercase tracking-widest text-xs">Daily Attendance & Slots</h3>
+                 <div className="h-72 w-full">
+                   <ResponsiveContainer width="100%" height="100%">
+                     <BarChart data={attData} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
+                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 'bold', fill: '#64748b' }} />
+                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 'bold', fill: '#64748b' }} allowDecimals={false} />
                        <RechartsTooltip 
                          cursor={{ fill: '#f1f5f9' }}
                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
                        />
-                       <Bar dataKey="users" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                       <Legend wrapperStyle={{ fontWeight: 'bold', fontSize: '12px' }} />
+                       <Bar dataKey="total" name="Total Slots" fill="#94a3b8" radius={[4, 4, 0, 0]} barSize={20} />
+                       <Bar dataKey="present" name="Slots Filled" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
                      </BarChart>
                    </ResponsiveContainer>
                  </div>
