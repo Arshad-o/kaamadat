@@ -104,7 +104,7 @@ export default function JobGiverRegister() {
           localStorage.removeItem('kaammadat_simulated_otp');
         }
 
-        router.push('/job-giver/otp');
+        router.push('/part-time-job-giver/otp');
       } else {
         setError(result.error || 'Failed to send OTP. Please try again.');
       }

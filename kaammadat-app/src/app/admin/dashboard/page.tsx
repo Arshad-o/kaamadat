@@ -461,6 +461,9 @@ export default function AdminDashboard() {
                                 <span className={`text-xs font-bold px-2 py-0.5 rounded ${user.type === 'worker' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
                                   {user.type === 'worker' ? '👷 Worker' : '💼 Job Giver'}
                                 </span>
+                                {user.kycVerified && (
+                                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">✅ KYC Verified</span>
+                                )}
                                 {user.warned && (
                                   <span className="text-xs font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">⚠️ Warned</span>
                                 )}

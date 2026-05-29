@@ -18,8 +18,22 @@ function mapUser(u: any) {
     type: u.role,
     warned: u.warned,
     warnedAt: u.warned_at,
-    cardOverride: u.card_tier
+    cardOverride: u.card_tier,
+    kycVerified: u.kyc_verified || false,
   };
+}
+
+export async function markKycVerified(email: string) {
+  try {
+    const { error } = await supabase
+      .from('users')
+      .update({ kyc_verified: true })
+      .eq('email_id', email);
+    if (error) throw error;
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
 }
 
 export async function getUsers() {

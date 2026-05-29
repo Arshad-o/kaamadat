@@ -109,7 +109,7 @@ export default function WorkerDashboard() {
     <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-geist-sans)] animate-[fade-in_0.6s_ease-in-out] pb-10">
       {/* Header */}
       <header className="bg-orange-500 text-white p-4 shadow-md flex justify-between items-center">
-         <Link href="/worker/profile" className="flex items-center gap-3 hover:opacity-90 transition cursor-pointer">
+         <Link href="/part-time-worker/profile" className="flex items-center gap-3 hover:opacity-90 transition cursor-pointer">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-orange-200">
              {/* eslint-disable-next-line @next/next/no-img-element */}
              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(workerName)}&background=random`} alt="Profile" />
@@ -155,11 +155,11 @@ export default function WorkerDashboard() {
         <section className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
            <h3 className="text-xl font-black mb-4 text-gray-800">Quick Dashboard Actions</h3>
            <div className="grid grid-cols-2 gap-4">
-              <Link href="/worker/search" className="bg-gradient-to-br from-orange-500 to-orange-600 p-5 rounded-2xl text-white shadow hover:shadow-orange-100 hover:-translate-y-0.5 transition flex flex-col justify-between h-32 group cursor-pointer">
+              <Link href="/part-time-worker/search" className="bg-gradient-to-br from-orange-500 to-orange-600 p-5 rounded-2xl text-white shadow hover:shadow-orange-100 hover:-translate-y-0.5 transition flex flex-col justify-between h-32 group cursor-pointer">
                  <span className="text-3xl transition group-hover:scale-110 self-start">🔍</span>
                  <span className="font-extrabold text-lg self-end">{t('search_jobs')}</span>
               </Link>
-              <Link href="/worker/applied-jobs" className="bg-gradient-to-br from-blue-500 to-blue-600 p-5 rounded-2xl text-white shadow hover:shadow-blue-100 hover:-translate-y-0.5 transition flex flex-col justify-between h-32 group cursor-pointer">
+              <Link href="/part-time-worker/applied-jobs" className="bg-gradient-to-br from-blue-500 to-blue-600 p-5 rounded-2xl text-white shadow hover:shadow-blue-100 hover:-translate-y-0.5 transition flex flex-col justify-between h-32 group cursor-pointer">
                  <span className="text-3xl transition group-hover:scale-110 self-start">📋</span>
                  <span className="font-extrabold text-lg self-end">{t('applied_jobs')}</span>
               </Link>
@@ -237,7 +237,7 @@ export default function WorkerDashboard() {
                             {job.cap}
                           </span>
                           {!isFull ? (
-                            <Link href="/worker/job-details">
+                            <Link href="/part-time-worker/job-details">
                               <button 
                                 onClick={() => localStorage.setItem('kaammadat_selected_job', JSON.stringify(job))}
                                 className="bg-orange-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow hover:bg-orange-600 cursor-pointer"
@@ -260,7 +260,7 @@ export default function WorkerDashboard() {
              )}
              
              {filteredJobs.length > 5 && (
-               <Link href="/worker/search" className="text-center w-full block bg-gray-50 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-100 transition cursor-pointer">
+               <Link href="/part-time-worker/search" className="text-center w-full block bg-gray-50 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-100 transition cursor-pointer">
                  View All {filteredJobs.length} Local Jobs →
                </Link>
              )}

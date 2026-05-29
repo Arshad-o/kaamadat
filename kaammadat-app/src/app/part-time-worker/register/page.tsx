@@ -9,7 +9,7 @@ import { districtMandals } from '@/data/mandals';
 import { verifyMandalInternet, addCustomMandal, getCustomMandals } from '@/app/actions/mandalActions';
 import KycModal from '@/components/KycModal';
 
-export default function JobGiverRegister() {
+export default function WorkerRegister() {
   const { t } = useLanguage();
   const router = useRouter();
 
@@ -86,16 +86,16 @@ export default function JobGiverRegister() {
       data.append('aadhar', formData.aadhar);
       data.append('address', formData.address);
       data.append('password', formData.password);
-      data.append('type', 'job-giver');
+      data.append('type', 'worker');
 
       // Trigger the real-time registration & OTP transmission
       const result = await registerUser(data) as any;
       if (result.success) {
-        // Save job giver details to localStorage for access on dashboard & OTP screens
+        // Save worker details to localStorage for access on dashboard & OTP screens
         localStorage.setItem('kaammadat_user_email', formData.email);
         localStorage.setItem('kaammadat_user_name', formData.name);
         localStorage.setItem('kaammadat_user_mobile', formData.mobile);
-        localStorage.setItem('kaammadat_user_type', 'job-giver');
+        localStorage.setItem('kaammadat_user_type', 'worker');
         localStorage.setItem('kaammadat_user_location', `${selectedMandal}, ${selectedDistrict}, ${selectedState}`);
 
         if (result.otpResult?.simulated && result.otpResult?.otp) {
@@ -104,7 +104,7 @@ export default function JobGiverRegister() {
           localStorage.removeItem('kaammadat_simulated_otp');
         }
 
-        router.push('/job-giver/otp');
+        router.push('/part-time-worker/otp');
       } else {
         setError(result.error || 'Failed to send OTP. Please try again.');
       }
@@ -116,10 +116,10 @@ export default function JobGiverRegister() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 flex flex-col items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-green-100 transition hover:shadow-green-100">
-        <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-center text-white">
-          <h2 className="text-3xl font-extrabold tracking-tight">{t('i_am_giver')}</h2>
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 flex flex-col items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-orange-100 transition hover:shadow-orange-100">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 text-center text-white">
+          <h2 className="text-3xl font-extrabold tracking-tight">{t('i_am_worker')}</h2>
           <p className="opacity-95 mt-2 text-sm">{t('powered_by')}</p>
         </div>
         
@@ -137,8 +137,8 @@ export default function JobGiverRegister() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium" 
-              placeholder="e.g. Anand Sharma" 
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
+              placeholder="e.g. Rahul Kumar" 
               required
             />
           </div>
@@ -151,7 +151,7 @@ export default function JobGiverRegister() {
                 name="mobile"
                 value={formData.mobile}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium" 
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
                 placeholder="10 digit mobile number" 
                 maxLength={10}
                 minLength={10}
@@ -166,8 +166,8 @@ export default function JobGiverRegister() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium" 
-                placeholder="anand@example.com" 
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
+                placeholder="rahul@example.com" 
                 required
               />
             </div>
@@ -184,7 +184,7 @@ export default function JobGiverRegister() {
                 name="aadhar"
                 value={formData.aadhar}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium" 
+                className="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
                 placeholder="12 digit aadhar number" 
                 maxLength={12}
                 minLength={12}
@@ -206,9 +206,9 @@ export default function JobGiverRegister() {
                   setShowKycModal(true);
                 }}
                 disabled={kycVerified}
-                className={`px-4 py-3 rounded-lg font-bold text-sm transition cursor-pointer shrink-0 ${kycVerified ? 'bg-green-100 text-green-700 border border-green-200 cursor-default' : 'bg-green-600 hover:bg-green-700 text-white shadow'}`}
+                className={`px-4 py-3 rounded-lg font-bold text-sm transition cursor-pointer shrink-0 ${kycVerified ? 'bg-green-100 text-green-700 border border-green-200 cursor-default' : 'bg-blue-600 hover:bg-blue-700 text-white shadow'}`}
               >
-                {kycVerified ? '✅ Done' : '🛡️ Verify'}
+                {kycVerified ? '✅ Done' : '🏛️ Verify'}
               </button>
             </div>
           </div>
@@ -221,7 +221,7 @@ export default function JobGiverRegister() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium" 
+                className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
                 placeholder="Min 6 characters" 
                 required
               />
@@ -239,7 +239,7 @@ export default function JobGiverRegister() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">State</label>
-              <select value={selectedState} onChange={e => { setSelectedState(e.target.value); setSelectedDistrict(''); setSelectedMandal(''); }} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 outline-none text-sm font-medium">
+              <select value={selectedState} onChange={e => { setSelectedState(e.target.value); setSelectedDistrict(''); setSelectedMandal(''); }} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 outline-none text-sm font-medium">
                 <option value="">Select State</option>
                 {Object.keys(indiaLocations).map(state => (
                   <option key={state} value={state}>{state}</option>
@@ -248,7 +248,7 @@ export default function JobGiverRegister() {
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">District</label>
-              <select value={selectedDistrict} onChange={e => { setSelectedDistrict(e.target.value); setSelectedMandal(''); }} disabled={!selectedState} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 outline-none text-sm font-medium disabled:opacity-50">
+              <select value={selectedDistrict} onChange={e => { setSelectedDistrict(e.target.value); setSelectedMandal(''); }} disabled={!selectedState} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 outline-none text-sm font-medium disabled:opacity-50">
                 <option value="">Select District</option>
                 {selectedState && indiaLocations[selectedState]?.map(district => (
                   <option key={district} value={district}>{district}</option>
@@ -257,7 +257,7 @@ export default function JobGiverRegister() {
             </div>
             <div className="col-span-1 sm:col-span-3">
               <label className="block text-sm font-bold text-gray-700 mb-1">Mandal</label>
-              <select value={selectedMandal} onChange={e => setSelectedMandal(e.target.value)} disabled={!selectedDistrict} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 outline-none text-sm font-medium disabled:opacity-50">
+              <select value={selectedMandal} onChange={e => setSelectedMandal(e.target.value)} disabled={!selectedDistrict} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 outline-none text-sm font-medium disabled:opacity-50">
                 <option value="">Select Mandal</option>
                 {selectedDistrict && (() => {
                   const staticM = districtMandals[selectedDistrict] || [];
@@ -267,18 +267,18 @@ export default function JobGiverRegister() {
                     <option key={mandal} value={mandal}>{mandal}</option>
                   ));
                 })()}
-                {selectedDistrict && <option value="Other" className="font-bold text-green-700 bg-green-50">➕ Other (Add New)</option>}
+                {selectedDistrict && <option value="Other" className="font-bold text-orange-600 bg-orange-50">➕ Other (Add New)</option>}
               </select>
 
               {selectedMandal === 'Other' && (
-                <div className="bg-green-50 border border-green-200 p-4 rounded-xl mt-2 animate-[fade-in_0.3s_ease-out]">
-                  <label className="block text-sm font-bold text-green-800 mb-2">Dictate or Type your Mandal</label>
+                <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl mt-2 animate-[fade-in_0.3s_ease-out]">
+                  <label className="block text-sm font-bold text-orange-800 mb-2">Dictate or Type your Mandal</label>
                   <div className="flex gap-2">
                     <input 
                       type="text" 
                       value={customMandalInput}
                       onChange={(e) => setCustomMandalInput(e.target.value)}
-                      className="flex-1 px-3 py-2 rounded-lg border border-green-300 focus:ring-2 focus:ring-green-500 outline-none text-sm"
+                      className="flex-1 px-3 py-2 rounded-lg border border-orange-300 focus:ring-2 focus:ring-orange-500 outline-none text-sm"
                       placeholder="E.g. Koregaon Park"
                     />
                     <button 
@@ -290,7 +290,7 @@ export default function JobGiverRegister() {
                            setIsVoiceListening(false);
                         }, 2500);
                       }}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition border border-green-300 ${isVoiceListening ? 'bg-red-500 text-white animate-pulse border-red-500' : 'bg-white text-green-700 hover:bg-green-100'}`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition border border-orange-300 ${isVoiceListening ? 'bg-red-500 text-white animate-pulse border-red-500' : 'bg-white text-orange-700 hover:bg-orange-100'}`}
                       title="Speak"
                     >
                       🎙️
@@ -315,7 +315,7 @@ export default function JobGiverRegister() {
                         setIsVerifyingMandal(false);
                       }}
                       disabled={isVerifyingMandal || !customMandalInput}
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-4 rounded-lg font-bold text-sm disabled:opacity-50"
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg font-bold text-sm disabled:opacity-50"
                     >
                       {isVerifyingMandal ? '...' : 'Verify'}
                     </button>
@@ -333,15 +333,15 @@ export default function JobGiverRegister() {
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <label className="text-sm font-bold text-gray-700">{t('address')}</label>
-              <span className="text-xs text-green-700 font-semibold bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">📮 Note: Type correct address for getting the card for your address by post</span>
+              <span className="text-xs text-orange-600 font-semibold bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">📮 Note: Type correct address for getting the card for your address by post</span>
             </div>
             <textarea 
               name="address"
               value={formData.address}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium" 
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
               rows={2} 
-              placeholder="Mumbai, Maharashtra"
+              placeholder="Srinagar, Kashmir"
               required
             ></textarea>
           </div>
@@ -353,17 +353,17 @@ export default function JobGiverRegister() {
               id="terms" 
               checked={formData.terms}
               onChange={handleChange}
-              className="mt-1 w-5 h-5 text-green-600 rounded border-gray-300 focus:ring-green-500 cursor-pointer bg-white" 
+              className="mt-1 w-5 h-5 text-orange-500 rounded border-gray-300 focus:ring-orange-500 cursor-pointer bg-white" 
             />
-             <label htmlFor="terms" className="text-xs text-gray-600 font-semibold cursor-pointer select-none leading-relaxed">
-               I agree to the <Link href="/terms" target="_blank" className="text-green-600 font-black hover:underline cursor-pointer">Terms & Conditions</Link> and confirm that all details provided are unique and true.
-             </label>
+            <label htmlFor="terms" className="text-xs text-gray-600 font-semibold cursor-pointer select-none leading-relaxed">
+              I agree to the <Link href="/terms" target="_blank" className="text-orange-600 font-black hover:underline cursor-pointer">Terms & Conditions</Link> and confirm that all details provided are unique and true.
+            </label>
           </div>
 
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full mt-4 bg-orange-500 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-orange-600 transition transform active:scale-95 disabled:bg-gray-400 flex items-center justify-center gap-2 cursor-pointer text-base"
+            className="w-full mt-4 bg-green-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-green-700 transition transform active:scale-95 disabled:bg-gray-400 flex items-center justify-center gap-2 cursor-pointer text-base"
           >
             {loading ? (
               <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -374,7 +374,7 @@ export default function JobGiverRegister() {
           <div className="text-center mt-4 pt-4 border-t border-gray-100">
             <p className="text-xs text-gray-500 font-semibold">
               Already have an account?{' '}
-              <Link href="/login" className="text-green-700 font-black hover:underline">
+              <Link href="/login" className="text-orange-600 font-black hover:underline">
                 Login Here
               </Link>
             </p>

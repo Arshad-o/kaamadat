@@ -45,7 +45,7 @@ export default function JobGiverDashboard() {
     <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-geist-sans)] animate-[fade-in_0.6s_ease-in-out]">
       {/* Header */}
       <header className="bg-green-600 text-white p-4 shadow-md flex justify-between items-center">
-        <Link href="/job-giver/profile" className="flex items-center gap-3 hover:opacity-90 transition cursor-pointer">
+        <Link href="/part-time-job-giver/profile" className="flex items-center gap-3 hover:opacity-90 transition cursor-pointer">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 font-extrabold shadow border border-green-200">
              {giverName.charAt(0)}
           </div>
@@ -75,11 +75,11 @@ export default function JobGiverDashboard() {
         <section className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
            <h3 className="text-xl font-black mb-4 text-gray-800">Quick Dashboard Actions</h3>
            <div className="grid grid-cols-2 gap-4">
-              <Link href="/job-giver/post-job" className="bg-gradient-to-br from-orange-500 to-orange-600 p-5 rounded-2xl text-white shadow hover:shadow-orange-100 hover:-translate-y-0.5 transition flex flex-col justify-between h-32 group cursor-pointer">
+              <Link href="/part-time-job-giver/post-job" className="bg-gradient-to-br from-orange-500 to-orange-600 p-5 rounded-2xl text-white shadow hover:shadow-orange-100 hover:-translate-y-0.5 transition flex flex-col justify-between h-32 group cursor-pointer">
                  <span className="text-3xl transition group-hover:scale-110 self-start">➕</span>
                  <span className="font-extrabold text-lg self-end">{t('post_new_job')}</span>
               </Link>
-              <Link href="/job-giver/posted-jobs" className="bg-gradient-to-br from-green-600 to-green-700 p-5 rounded-2xl text-white shadow hover:shadow-green-100 hover:-translate-y-0.5 transition flex flex-col justify-between h-32 group cursor-pointer">
+              <Link href="/part-time-job-giver/posted-jobs" className="bg-gradient-to-br from-green-600 to-green-700 p-5 rounded-2xl text-white shadow hover:shadow-green-100 hover:-translate-y-0.5 transition flex flex-col justify-between h-32 group cursor-pointer">
                  <span className="text-3xl transition group-hover:scale-110 self-start">📋</span>
                  <span className="font-extrabold text-lg self-end">{t('posted_jobs')}</span>
               </Link>
@@ -111,7 +111,7 @@ export default function JobGiverDashboard() {
         <section className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
            <div className="flex justify-between items-center mb-4">
              <h3 className="text-xl font-bold text-gray-800">{t('posted_jobs')}</h3>
-             <Link href="/job-giver/posted-jobs" className="text-sm font-bold text-green-600 underline hover:text-green-700">Manage All</Link>
+             <Link href="/part-time-job-giver/posted-jobs" className="text-sm font-bold text-green-600 underline hover:text-green-700">Manage All</Link>
            </div>
            
            {jobs.length === 0 ? (

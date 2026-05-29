@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
@@ -7,7 +7,7 @@ import { registerUser } from '@/app/actions/userActions';
 import { indiaLocations } from '@/data/indiaLocations';
 import { districtMandals } from '@/data/mandals';
 import { verifyMandalInternet, addCustomMandal, getCustomMandals } from '@/app/actions/mandalActions';
-import { useEffect } from 'react';
+import KycModal from '@/components/KycModal';
 
 export default function WorkerRegister() {
   const { t } = useLanguage();
@@ -30,6 +30,8 @@ export default function WorkerRegister() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showKycModal, setShowKycModal] = useState(false);
+  const [kycVerified, setKycVerified] = useState(false);
 
   const [customMandalsDb, setCustomMandalsDb] = useState<Record<string, string[]>>({});
   const [customMandalInput, setCustomMandalInput] = useState('');
@@ -172,19 +174,43 @@ export default function WorkerRegister() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">{t('aadhar_number')}</label>
-            <input 
-              type="text" 
-              name="aadhar"
-              value={formData.aadhar}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
-              placeholder="12 digit aadhar number" 
-              maxLength={12}
-              minLength={12}
-              pattern="\d{12}"
-              required
-            />
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <label className="text-sm font-bold text-gray-700">{t('aadhar_number')}</label>
+              {kycVerified && <span className="text-xs bg-green-100 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-bold">✅ KYC Verified</span>}
+            </div>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                name="aadhar"
+                value={formData.aadhar}
+                onChange={handleChange}
+                className="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium" 
+                placeholder="12 digit aadhar number" 
+                maxLength={12}
+                minLength={12}
+                pattern="\d{12}"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (formData.aadhar.length !== 12 || !/^\d{12}$/.test(formData.aadhar)) {
+                    setError('Please enter a valid 12-digit Aadhar number first.');
+                    return;
+                  }
+                  if (formData.mobile.length !== 10 || !/^\d{10}$/.test(formData.mobile)) {
+                    setError('Please enter a valid 10-digit mobile number first.');
+                    return;
+                  }
+                  setError('');
+                  setShowKycModal(true);
+                }}
+                disabled={kycVerified}
+                className={`px-4 py-3 rounded-lg font-bold text-sm transition cursor-pointer shrink-0 ${kycVerified ? 'bg-green-100 text-green-700 border border-green-200 cursor-default' : 'bg-blue-600 hover:bg-blue-700 text-white shadow'}`}
+              >
+                {kycVerified ? '✅ Done' : '🏛️ Verify'}
+              </button>
+            </div>
           </div>
 
           <div>
@@ -355,6 +381,15 @@ export default function WorkerRegister() {
           </div>
         </form>
       </div>
+
+      <KycModal
+        isOpen={showKycModal}
+        aadhar={formData.aadhar}
+        mobile={formData.mobile}
+        userEmail={formData.email}
+        onVerified={() => { setKycVerified(true); setShowKycModal(false); }}
+        onClose={() => setShowKycModal(false)}
+      />
     </div>
   );
 }

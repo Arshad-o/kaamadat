@@ -86,7 +86,7 @@ function JobSearchContent() {
       <header className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 shadow-lg sticky top-0 z-10">
         <div className="flex gap-3 items-center max-w-4xl mx-auto">
           <Link
-            href="/worker/dashboard"
+            href="/part-time-worker/dashboard"
             className="font-bold text-2xl hover:bg-orange-700/40 w-10 h-10 flex items-center justify-center rounded-full transition shrink-0"
           >
             ←
@@ -192,7 +192,7 @@ function JobSearchContent() {
                         {job.cap}
                       </span>
                       {!isFull ? (
-                        <Link href="/worker/job-details">
+                        <Link href="/part-time-worker/job-details">
                           <button
                             onClick={() => localStorage.setItem('kaammadat_selected_job', JSON.stringify(job))}
                             className="bg-orange-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-orange-600 cursor-pointer transition"
