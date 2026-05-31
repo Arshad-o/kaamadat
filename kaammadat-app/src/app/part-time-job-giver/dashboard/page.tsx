@@ -9,6 +9,7 @@ import LogoutModal from '@/components/LogoutModal';
 export default function JobGiverDashboard() {
   const { t } = useLanguage();
   const [giverName, setGiverName] = useState('Anand Sharma');
+  const [profilePhoto, setProfilePhoto] = useState<string>('');
   const [jobs, setJobs] = useState<any[]>([]);
   const [showLogout, setShowLogout] = useState(false);
   const [kycVerified, setKycVerified] = useState(false);
@@ -20,10 +21,13 @@ export default function JobGiverDashboard() {
     const savedEmail = localStorage.getItem('kaammadat_user_email');
     if (savedEmail) {
       getUsers().then(users => {
-        const u = users.find(x => x.email === savedEmail);
+        const u = users.find(x => x?.email === savedEmail);
         if (u && u.kycVerified) setKycVerified(true);
       });
     }
+
+    const savedPhoto = localStorage.getItem('kaammadat_pt_job_giver_photo');
+    if (savedPhoto) setProfilePhoto(savedPhoto);
 
     // Only fetch jobs that belong to this giver
     getJobs().then((data) => {
@@ -46,8 +50,12 @@ export default function JobGiverDashboard() {
       {/* Header */}
       <header className="bg-green-600 text-white p-4 shadow-md flex justify-between items-center">
         <Link href="/part-time-job-giver/profile" className="flex items-center gap-3 hover:opacity-90 transition cursor-pointer">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 font-extrabold shadow border border-green-200">
-             {giverName.charAt(0)}
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 font-extrabold shadow border border-green-200 overflow-hidden">
+             {profilePhoto ? (
+               <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+             ) : (
+               giverName.charAt(0)
+             )}
           </div>
           <div className="flex flex-col">
             <h1 className="font-bold text-xl leading-tight">Hi, {giverName}</h1>
@@ -62,12 +70,27 @@ export default function JobGiverDashboard() {
 
       <main className="p-4 max-w-4xl mx-auto flex flex-col gap-6 mt-6">
         
-        {/* Welcome Animation Area */}
-        <div className="bg-white rounded-2xl p-6 shadow-md border border-green-100 flex items-center gap-4 animate-[pulse_4s_ease-in-out_infinite]">
-          <div className="text-4xl">🏢</div>
-          <div>
-            <h2 className="text-2xl font-black text-gray-800">Welcome Back!</h2>
-            <p className="text-gray-600 font-medium">You have {jobs.length} active job postings.</p>
+        {/* Profile Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-green-100 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-green-600 to-green-700 z-0"></div>
+          
+          <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden relative z-10 bg-gray-100 shrink-0 flex items-center justify-center mt-6 sm:mt-12">
+            {profilePhoto ? (
+               <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+               <span className="text-4xl text-green-600 font-bold">{giverName.charAt(0)}</span>
+            )}
+          </div>
+          
+          <div className="flex flex-col items-center sm:items-start relative z-10 sm:mt-16 text-center sm:text-left">
+            <h2 className="text-3xl font-black text-gray-800">{giverName}</h2>
+            <p className="text-green-600 font-bold mb-2">Part-Time Job Giver</p>
+            {kycVerified ? (
+              <span className="bg-blue-100 text-blue-800 font-extrabold px-3 py-1 rounded-full text-xs shadow-sm border border-blue-200">✅ KYC Verified Profile</span>
+            ) : (
+              <span className="bg-gray-100 text-gray-800 font-extrabold px-3 py-1 rounded-full text-xs shadow-sm border border-gray-200">⏳ Profile Status</span>
+            )}
+            <p className="text-gray-500 font-medium mt-4 max-w-sm">Welcome back! You currently have {jobs.length} active job postings. Ready to hire more workers?</p>
           </div>
         </div>
 

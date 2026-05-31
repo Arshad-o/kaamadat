@@ -92,7 +92,7 @@ export default function WorkerOTP() {
         setVerified(true);
         // Save persistent login session
         localStorage.setItem('kaammadat_user_logged_in', 'true');
-        localStorage.setItem('kaammadat_user_type', 'worker');
+        localStorage.setItem('kaammadat_user_type', 'part-time-worker');
         setTimeout(() => {
           router.push('/part-time-worker/dashboard');
         }, 2000);

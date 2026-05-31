@@ -12,6 +12,7 @@ export default function JobGiverDashboard() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [showLogout, setShowLogout] = useState(false);
   const [kycVerified, setKycVerified] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState('');
 
   useEffect(() => {
     const savedName = localStorage.getItem('kaammadat_user_name');
@@ -20,10 +21,13 @@ export default function JobGiverDashboard() {
     const savedEmail = localStorage.getItem('kaammadat_user_email');
     if (savedEmail) {
       getUsers().then(users => {
-        const u = users.find(x => x.email === savedEmail);
+        const u = users.find(x => x?.email === savedEmail);
         if (u && u.kycVerified) setKycVerified(true);
       });
     }
+
+    const savedPhoto = localStorage.getItem('kaammadat_user_photo');
+    if (savedPhoto) setProfilePhoto(savedPhoto);
 
     // Only fetch jobs that belong to this giver
     getJobs().then((data) => {
@@ -46,8 +50,12 @@ export default function JobGiverDashboard() {
       {/* Header */}
       <header className="bg-green-600 text-white p-4 shadow-md flex justify-between items-center">
         <Link href="/job-giver/profile" className="flex items-center gap-3 hover:opacity-90 transition cursor-pointer">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 font-extrabold shadow border border-green-200">
-             {giverName.charAt(0)}
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 font-extrabold shadow border border-green-200 overflow-hidden shrink-0">
+             {profilePhoto ? (
+               <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+             ) : (
+               giverName.charAt(0)
+             )}
           </div>
           <div className="flex flex-col">
             <h1 className="font-bold text-xl leading-tight">Hi, {giverName}</h1>

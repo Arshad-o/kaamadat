@@ -27,6 +27,8 @@ export default function JobGiverRegister() {
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedMandal, setSelectedMandal] = useState('');
 
+  const [profilePhoto, setProfilePhoto] = useState<string>('');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -38,6 +40,17 @@ export default function JobGiverRegister() {
   const [isVerifyingMandal, setIsVerifyingMandal] = useState(false);
   const [mandalVerificationMsg, setMandalVerificationMsg] = useState({ text: '', type: '' });
   const [isVoiceListening, setIsVoiceListening] = useState(false);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     getCustomMandals().then(setCustomMandalsDb);
@@ -57,8 +70,8 @@ export default function JobGiverRegister() {
     e.preventDefault();
     setError('');
 
-    if (!formData.name || !formData.mobile || !formData.email || !formData.aadhar || !formData.address || !formData.password || !selectedState || !selectedDistrict || !selectedMandal) {
-      setError('Please fill in all fields including location details.');
+    if (!formData.name || !formData.mobile || !formData.email || !formData.aadhar || !formData.address || !formData.password || !selectedState || !selectedDistrict || !selectedMandal || !profilePhoto) {
+      setError('Please fill in all fields including profile photo and location details.');
       return;
     }
 
@@ -96,6 +109,7 @@ export default function JobGiverRegister() {
         localStorage.setItem('kaammadat_user_name', formData.name);
         localStorage.setItem('kaammadat_user_mobile', formData.mobile);
         localStorage.setItem('kaammadat_user_type', 'job-giver');
+        localStorage.setItem('kaammadat_user_photo', profilePhoto);
         localStorage.setItem('kaammadat_user_location', `${selectedMandal}, ${selectedDistrict}, ${selectedState}`);
 
         if (result.otpResult?.simulated && result.otpResult?.otp) {
@@ -141,6 +155,26 @@ export default function JobGiverRegister() {
               placeholder="e.g. Anand Sharma" 
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Profile Photo (Mandatory)</label>
+            <p className="text-xs text-green-700 font-semibold mb-2">Note: This photo will appear on your dashboard card exactly as uploaded.</p>
+            <div className="flex items-center gap-4">
+              {profilePhoto && (
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-green-300 shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-green-500 outline-none transition text-sm cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" 
+                required
+              />
+            </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -256,13 +290,12 @@ export default function JobGiverRegister() {
               </select>
             </div>
             <div className="col-span-1 sm:col-span-3">
-              <label className="block text-sm font-bold text-gray-700 mb-1">Mandal</label>
               <select value={selectedMandal} onChange={e => setSelectedMandal(e.target.value)} disabled={!selectedDistrict} className="w-full px-3 py-3 rounded-lg border border-gray-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 outline-none text-sm font-medium disabled:opacity-50">
                 <option value="">Select Mandal</option>
                 {selectedDistrict && (() => {
                   const staticM = districtMandals[selectedDistrict] || [];
                   const customM = customMandalsDb[selectedDistrict] || [];
-                  const allM = Array.from(new Set([...staticM, ...customM])).sort();
+                  const allM = Array.from(new Set([...staticM, ...customM])).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
                   return allM.map(mandal => (
                     <option key={mandal} value={mandal}>{mandal}</option>
                   ));
@@ -278,7 +311,7 @@ export default function JobGiverRegister() {
                       type="text" 
                       value={customMandalInput}
                       onChange={(e) => setCustomMandalInput(e.target.value)}
-                      className="flex-1 px-3 py-2 rounded-lg border border-green-300 focus:ring-2 focus:ring-green-500 outline-none text-sm"
+                      className="flex-1 px-3 py-2 rounded-lg border border-green-300 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 outline-none text-sm"
                       placeholder="E.g. Koregaon Park"
                     />
                     <button 

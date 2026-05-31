@@ -77,7 +77,11 @@ export async function registerUser(formData: FormData) {
     const aadhar = formData.get('aadhar') as string;
     const address = formData.get('address') as string;
     const password = formData.get('password') as string;
-    const type = formData.get('type') as 'worker' | 'job-giver';
+    const type = formData.get('type') as 'worker' | 'job-giver' | 'part-time-worker' | 'part-time-job-giver';
+
+    const dbRole = (type === 'part-time-worker') ? 'worker' : 
+                   (type === 'part-time-job-giver') ? 'job-giver' : 
+                   type;
 
     if (!email || !password || !name) {
       return { success: false, error: 'Name, Email, and Password are required.' };
@@ -91,14 +95,23 @@ export async function registerUser(formData: FormData) {
       return { success: false, error: 'Aadhar number must be exactly 12 digits.' };
     }
 
-    // Check existing
+    // Check existing globally
     const { data: existingUsers } = await supabase
       .from('users')
       .select('*')
       .or(`email_id.eq.${email},mobile_number.eq.${mobile}${aadhar ? `,aadhar_number.eq.${aadhar}` : ''}`);
 
     if (existingUsers && existingUsers.length > 0) {
-      return { success: false, error: `Credential Error: User already exists with this Email/Mobile/Aadhar.` };
+      const sameRoleUser = existingUsers.find((u: any) => u.role === dbRole);
+      if (sameRoleUser) {
+        return { success: false, error: `Credential Error: You already have an account with this Email/Mobile/Aadhar. You can log in directly using the login page with your existing password!` };
+      } else {
+        const firstMatch = existingUsers[0];
+        const roleLabel = firstMatch.role === 'worker' ? 'Part-Time / Daily Worker' :
+                          firstMatch.role === 'job-giver' ? 'Part-Time / Daily Job Giver' :
+                          firstMatch.role;
+        return { success: false, error: `Credential Error: These credentials (Email/Mobile/Aadhar) are already registered under a different role (${roleLabel}). Please use unique credentials for your new role.` };
+      }
     }
 
     // Add new user
@@ -112,11 +125,23 @@ export async function registerUser(formData: FormData) {
       aadhar_number: aadhar || null,
       address: address,
       password_hash: hashedPassword,
-      role: type
+      role: dbRole
     }]);
 
     if (error) {
        console.error("Supabase insert error:", error);
+       if (error.code === '23505') {
+         if (error.message?.includes('email_id')) {
+           return { success: false, error: 'Credential Error: This Email is already registered. Please use a different email or log in.' };
+         }
+         if (error.message?.includes('mobile_number')) {
+           return { success: false, error: 'Credential Error: This Mobile Number is already registered. Please use a different mobile number.' };
+         }
+         if (error.message?.includes('aadhar_number')) {
+           return { success: false, error: 'Credential Error: This Aadhar Number is already registered. Please verify your details.' };
+         }
+         return { success: false, error: 'Credential Error: A user with these credentials already exists.' };
+       }
        throw error;
     }
 
@@ -129,12 +154,15 @@ export async function registerUser(formData: FormData) {
   }
 }
 
-export async function loginUser(identifier: string, password: string, type: 'admin' | 'worker' | 'job-giver') {
+export async function loginUser(identifier: string, password: string, type: 'admin' | 'worker' | 'job-giver' | 'part-time-worker' | 'part-time-job-giver') {
   try {
+    const dbRole = (type === 'part-time-worker') ? 'worker' : 
+                   (type === 'part-time-job-giver') ? 'job-giver' : 
+                   type;
     const { data: users, error } = await supabase
       .from('users')
       .select('*')
-      .eq('role', type)
+      .eq('role', dbRole)
       .or(`email_id.eq.${identifier},mobile_number.eq.${identifier}`);
 
     if (error || !users || users.length === 0) {
@@ -180,13 +208,16 @@ export async function loginUser(identifier: string, password: string, type: 'adm
   }
 }
 
-export async function requestPasswordResetOTP(email: string, type: 'admin' | 'worker' | 'job-giver') {
+export async function requestPasswordResetOTP(email: string, type: 'admin' | 'worker' | 'job-giver' | 'part-time-worker' | 'part-time-job-giver') {
   try {
+    const dbRole = (type === 'part-time-worker') ? 'worker' : 
+                   (type === 'part-time-job-giver') ? 'job-giver' : 
+                   type;
     const { data: users } = await supabase
       .from('users')
       .select('*')
       .eq('email_id', email)
-      .eq('role', type);
+      .eq('role', dbRole);
 
     if (!users || users.length === 0) {
       return { success: false, error: 'No account found with this email for the selected role.' };
@@ -199,8 +230,11 @@ export async function requestPasswordResetOTP(email: string, type: 'admin' | 'wo
   }
 }
 
-export async function resetPassword(email: string, enteredOtp: string, newPassword: string, type: 'admin' | 'worker' | 'job-giver') {
+export async function resetPassword(email: string, enteredOtp: string, newPassword: string, type: 'admin' | 'worker' | 'job-giver' | 'part-time-worker' | 'part-time-job-giver') {
   try {
+    const dbRole = (type === 'part-time-worker') ? 'worker' : 
+                   (type === 'part-time-job-giver') ? 'job-giver' : 
+                   type;
     const verifyResult = await verifyOTP(enteredOtp);
     if (!verifyResult.success) {
       return { success: false, error: verifyResult.error || 'Invalid OTP code.' };
@@ -213,7 +247,7 @@ export async function resetPassword(email: string, enteredOtp: string, newPasswo
       .from('users')
       .update({ password_hash: hashedPassword })
       .eq('email_id', email)
-      .eq('role', type);
+      .eq('role', dbRole);
 
     if (error) throw error;
 

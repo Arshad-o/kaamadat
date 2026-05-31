@@ -10,25 +10,59 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-
-  --animate-walk-and-lean: walk-and-lean 3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-@keyframes walk-and-lean {
-  0% {
-    transform: translateX(-300px) scaleX(1);
-    opacity: 0;
-  }
-  30% {
-    opacity: 1;
-  }
-  70% {
-    transform: translateX(20px) scaleX(1);
-  }
-  100% {
-    transform: translateX(0) scaleX(-1); /* Flips to lean against the panel */
-    opacity: 1;
-  }
+/* ── Container slides in from left ── */
+@keyframes walk-slide {
+  0%   { transform: translateX(-640px); opacity: 0; }
+  4%   { opacity: 1; }
+  100% { transform: translateX(0px);    opacity: 1; }
+}
+
+/* ── Legs swing (front leg) ── */
+@keyframes limb-a {
+  0%   { transform: rotate(-28deg); }
+  100% { transform: rotate(28deg);  }
+}
+
+/* ── Legs swing (back leg, opposite phase) ── */
+@keyframes limb-b {
+  0%   { transform: rotate(28deg);  }
+  100% { transform: rotate(-28deg); }
+}
+
+/* ── Shins bend at knee ── */
+@keyframes shin-a {
+  0%   { transform: rotate(0deg);  }
+  100% { transform: rotate(22deg); }
+}
+@keyframes shin-b {
+  0%   { transform: rotate(22deg); }
+  100% { transform: rotate(0deg);  }
+}
+
+/* ── Arms swing (front arm) ── */
+@keyframes arm-a {
+  0%   { transform: rotate(22deg);  }
+  100% { transform: rotate(-22deg); }
+}
+
+/* ── Arms swing (back arm, opposite phase) ── */
+@keyframes arm-b {
+  0%   { transform: rotate(-22deg); }
+  100% { transform: rotate(22deg);  }
+}
+
+/* ── Whole torso bobs up/down each step ── */
+@keyframes body-bob {
+  0%   { transform: translateY(0px);  }
+  100% { transform: translateY(-6px); }
+}
+
+/* ── Lean pose: gentle breathing idle ── */
+@keyframes idle-breathe {
+  0%, 100% { transform: rotate(8deg) translateY(0px);  }
+  50%       { transform: rotate(8deg) translateY(-3px); }
 }
 
 @media (prefers-color-scheme: dark) {

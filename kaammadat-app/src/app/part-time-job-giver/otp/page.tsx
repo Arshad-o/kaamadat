@@ -92,7 +92,7 @@ export default function JobGiverOTP() {
         setVerified(true);
         // Save persistent login session
         localStorage.setItem('kaammadat_user_logged_in', 'true');
-        localStorage.setItem('kaammadat_user_type', 'job-giver');
+        localStorage.setItem('kaammadat_user_type', 'part-time-job-giver');
         setTimeout(() => {
           router.push('/part-time-job-giver/dashboard');
         }, 2000);

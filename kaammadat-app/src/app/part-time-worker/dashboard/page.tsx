@@ -11,6 +11,7 @@ import { districtMandals } from '@/data/mandals';
 export default function WorkerDashboard() {
   const { t } = useLanguage();
   const [workerName, setWorkerName] = useState('Rahul Kumar');
+  const [profilePhoto, setProfilePhoto] = useState<string>('');
   const [showLogout, setShowLogout] = useState(false);
   const [workPhotos, setWorkPhotos] = useState<any[]>([]);
   const [userLocation, setUserLocation] = useState('');
@@ -29,6 +30,7 @@ export default function WorkerDashboard() {
   const [appliedAmount, setAppliedAmount] = useState('');
 
   const [jobs, setJobs] = useState<any[]>([]);
+  const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
 
   useEffect(() => {
     const savedName = localStorage.getItem('kaammadat_user_name');
@@ -41,10 +43,13 @@ export default function WorkerDashboard() {
     
     if (savedEmail) {
       getUsers().then(users => {
-        const u = users.find(x => x.email === savedEmail);
+        const u = users.find(x => x?.email === savedEmail);
         if (u && u.kycVerified) setKycVerified(true);
       });
     }
+
+    const savedPhoto = localStorage.getItem('kaammadat_pt_worker_photo');
+    if (savedPhoto) setProfilePhoto(savedPhoto);
 
     // Fetch jobs for local filtering
     getJobs().then(data => {
@@ -52,6 +57,31 @@ export default function WorkerDashboard() {
       if (savedLocation) {
         const count = data.filter((j: any) => j.location.toLowerCase().includes(savedLocation.toLowerCase())).length;
         setLocalJobsCount(count);
+      }
+
+      // Load applied jobs
+      if (savedEmail) {
+        const rawApps = localStorage.getItem('kaammadat_applications');
+        if (rawApps) {
+          const allApps = JSON.parse(rawApps);
+          const myApps = allApps.filter((a: any) => a.workerEmail === savedEmail);
+          if (myApps.length > 0) {
+            const enriched = myApps.map((app: any) => {
+              const job = data.find((j: any) => j.id === app.jobId);
+              if (!job) return null;
+              return {
+                id: app.jobId,
+                title: job.title,
+                giver: job.giver || 'Unknown',
+                date: job.date,
+                salary: job.salary,
+                status: app.status || 'Pending',
+                img: job.img,
+              };
+            }).filter(Boolean);
+            setAppliedJobs(enriched);
+          }
+        }
       }
     });
   }, []);
@@ -112,7 +142,7 @@ export default function WorkerDashboard() {
          <Link href="/part-time-worker/profile" className="flex items-center gap-3 hover:opacity-90 transition cursor-pointer">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-orange-200">
              {/* eslint-disable-next-line @next/next/no-img-element */}
-             <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(workerName)}&background=random`} alt="Profile" />
+             <img src={profilePhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(workerName)}&background=random`} alt="Profile" className="w-full h-full object-cover" />
           </div>
           <div className="flex flex-col">
             <h1 className="font-bold text-xl leading-tight">Hi, {workerName}</h1>
@@ -142,12 +172,27 @@ export default function WorkerDashboard() {
           </div>
         )}
 
-        {/* Welcome Animation Area */}
-        <div className="bg-white rounded-2xl p-6 shadow-md border border-orange-100 flex items-center gap-4 animate-[pulse_4s_ease-in-out_infinite]">
-          <div className="text-4xl">👋</div>
-          <div>
-            <h2 className="text-2xl font-black text-gray-800">Welcome Back!</h2>
-            <p className="text-gray-600 font-medium">Ready to find some work today?</p>
+        {/* Profile Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-orange-100 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-orange-400 to-orange-500 z-0"></div>
+          
+          <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden relative z-10 bg-gray-100 shrink-0 flex items-center justify-center mt-6 sm:mt-12">
+            <img 
+              src={profilePhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(workerName)}&background=random`} 
+              alt="Profile" 
+              className="w-full h-full object-cover" 
+            />
+          </div>
+          
+          <div className="flex flex-col items-center sm:items-start relative z-10 sm:mt-16 text-center sm:text-left">
+            <h2 className="text-3xl font-black text-gray-800">{workerName}</h2>
+            <p className="text-orange-600 font-bold mb-2">Part-Time Worker</p>
+            {kycVerified ? (
+              <span className="bg-green-100 text-green-800 font-extrabold px-3 py-1 rounded-full text-xs shadow-sm border border-green-200">✅ KYC Verified Profile</span>
+            ) : (
+              <span className="bg-gray-100 text-gray-800 font-extrabold px-3 py-1 rounded-full text-xs shadow-sm border border-gray-200">⏳ Profile Status</span>
+            )}
+            <p className="text-gray-500 font-medium mt-4 max-w-sm">Welcome back! Ready to find some work today? Check out the local jobs near your area below.</p>
           </div>
         </div>
 
@@ -164,6 +209,58 @@ export default function WorkerDashboard() {
                  <span className="font-extrabold text-lg self-end">{t('applied_jobs')}</span>
               </Link>
            </div>
+        </section>
+
+        {/* My Job Applications & Status */}
+        <section className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-black text-gray-800">My Job Applications & Status</h3>
+            <Link href="/part-time-worker/applied-jobs" className="text-sm font-bold text-orange-500 hover:underline">View All</Link>
+          </div>
+          
+          {appliedJobs.length === 0 ? (
+            <div className="p-6 text-center bg-gray-50 rounded-xl border border-gray-200 text-gray-400">
+              <span className="text-4xl block mb-2">📋</span>
+              <p className="font-semibold text-sm">No active applications yet.</p>
+              <p className="text-xs text-gray-500 mt-1">Jobs you apply for will show up here with their status.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {appliedJobs.slice(0, 3).map(app => {
+                let statusBg = 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                let statusLabel = 'Pending Review';
+                if (app.status === 'Approved') {
+                  statusBg = 'bg-green-50 text-green-700 border-green-200';
+                  statusLabel = 'Approved 🎉';
+                } else if (app.status === 'In Progress') {
+                  statusBg = 'bg-blue-50 text-blue-700 border-blue-200';
+                  statusLabel = 'In Progress 🛠️';
+                } else if (app.status === 'Completed') {
+                  statusBg = 'bg-gray-50 text-gray-700 border-gray-200';
+                  statusLabel = 'Completed ✅';
+                }
+                
+                return (
+                  <div key={app.id} className="border border-gray-100 rounded-xl p-4 flex gap-4 items-center hover:bg-gray-50/50 transition">
+                    <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-gray-200">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={app.img} alt={app.title} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-sm text-gray-800 truncate">{app.title}</h4>
+                      <p className="text-xs text-gray-500 font-medium">👤 {app.giver} • 📅 {app.date}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-xs font-bold text-green-600">₹{app.salary}/day</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusBg}`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* Local Work Finder */}

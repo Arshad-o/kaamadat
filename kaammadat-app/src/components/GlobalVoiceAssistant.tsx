@@ -34,7 +34,7 @@ export default function GlobalVoiceAssistant() {
       if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition();
         recognitionRef.current.continuous = false;
-        recognitionRef.current.interimResults = false;
+        recognitionRef.current.interimResults = true;
         
         recognitionRef.current.onstart = () => {
           setIsListening(true);
@@ -43,15 +43,34 @@ export default function GlobalVoiceAssistant() {
         };
 
         recognitionRef.current.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript.toLowerCase();
-          setStatusMsg(`Heard: "${transcript}"`);
-          handleCommand(transcript);
+          let finalTranscript = '';
+          let interimTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
+          }
+
+          if (interimTranscript) {
+            setStatusMsg(`Heard: "${interimTranscript}..."`);
+          } else if (finalTranscript) {
+            setStatusMsg(`Processing: "${finalTranscript}"`);
+            handleCommand(finalTranscript);
+            // Stop after processing a final command
+            setIsListening(false);
+            recognitionRef.current?.stop();
+          }
         };
 
         recognitionRef.current.onerror = (event: any) => {
           setIsListening(false);
           if (event.error === 'no-speech') {
             setStatusMsg('No speech detected.');
+          } else if (event.error === 'aborted') {
+            setStatusMsg('Voice search stopped.');
           } else {
             setStatusMsg(`Error: ${event.error}`);
           }
@@ -84,34 +103,105 @@ export default function GlobalVoiceAssistant() {
 
   const handleCommand = (transcript: string) => {
     const speech = transcript.toLowerCase();
-    
-    // Command: Search Jobs
-    if (speech.includes('search') || speech.includes('find') || speech.includes('job') || speech.includes('show') || speech.includes('kam') || speech.includes('kaam')) {
-      // Try to extract a keyword (e.g. "find plumber jobs" -> "plumber")
-      const words = speech.replace(/[.,?!]/g, '').split(' ');
-      const ignoreWords = ['search', 'find', 'for', 'a', 'an', 'the', 'job', 'jobs', 'show', 'me', 'kam', 'kaam', 'mujhe', 'chahiye'];
-      const keywords = words.filter(w => !ignoreWords.includes(w));
-      const query = keywords.join(' ');
-      
-      router.push(`/worker/search${query ? `?q=${encodeURIComponent(query)}` : ''}`);
-      return;
-    }
-    
-    // Command: Post a Job
-    if (speech.includes('post') || speech.includes('create') || speech.includes('hire') || speech.includes('give')) {
-      router.push('/job-giver/post-job');
+
+    // Command: Open Loyalty Card in any way
+    if (
+      speech.includes('card') ||
+      speech.includes('loyalty') ||
+      speech.includes('badge') ||
+      speech.includes('membership') ||
+      speech.includes('digital card') ||
+      speech.includes('profile card') ||
+      speech.includes('show card') ||
+      speech.includes('open card')
+    ) {
+      window.dispatchEvent(new Event('open-loyalty-card'));
+      setStatusMsg('Opening Loyalty Card... 🏅');
       return;
     }
 
-    // Command: Dashboard / Home
-    if (speech.includes('home') || speech.includes('dashboard') || speech.includes('profile')) {
-      // Route based on role if possible, but default to worker dashboard for now
+    // Command: Login page — check FIRST before job search swallows it
+    if (speech.includes('part-time login') || speech.includes('part time login') || speech.includes('student login')) {
+      router.push('/part-time-login');
+      return;
+    }
+
+    if (
+      speech.includes('open login') ||
+      speech.includes('login') ||
+      speech.includes('log in') ||
+      speech.includes('sign in') ||
+      speech.includes('lॉgin') ||
+      speech.includes('लॉगिन')
+    ) {
+      router.push('/login');
+      return;
+    }
+
+    // Command: Register / Sign up
+    if (
+      speech.includes('register') ||
+      speech.includes('sign up') ||
+      speech.includes('signup') ||
+      speech.includes('new account') ||
+      speech.includes('worker register') ||
+      speech.includes('job giver register')
+    ) {
+      if (speech.includes('giver') || speech.includes('employer') || speech.includes('hire')) {
+        router.push('/job-giver/register');
+      } else {
+        router.push('/worker/register');
+      }
+      return;
+    }
+
+    // Command: Go to main / home page
+    if (
+      speech.includes('home') ||
+      speech.includes('main page') ||
+      speech.includes('go back') ||
+      speech.includes('start')
+    ) {
+      router.push('/');
+      return;
+    }
+
+    // Command: Dashboard
+    if (speech.includes('dashboard') || speech.includes('profile')) {
       router.push('/worker/dashboard');
       return;
     }
 
-    // If no specific command matches, just do a general search
-    router.push(`/worker/search?q=${encodeURIComponent(speech)}`);
+    // Command: Post a Job
+    if (
+      speech.includes('post') ||
+      speech.includes('create') ||
+      speech.includes('hire') ||
+      (speech.includes('give') && speech.includes('job'))
+    ) {
+      router.push('/job-giver/post-job');
+      return;
+    }
+
+    // Command: Search Jobs — kept LAST so it doesn't catch login/register commands
+    if (
+      speech.includes('search') ||
+      speech.includes('find') ||
+      speech.includes('show') ||
+      speech.includes('kam') ||
+      speech.includes('kaam') ||
+      (speech.includes('job') && !speech.includes('login'))
+    ) {
+      const words = speech.replace(/[.,?!]/g, '').split(' ');
+      const ignoreWords = ['search', 'find', 'for', 'a', 'an', 'the', 'job', 'jobs', 'show', 'me', 'kam', 'kaam', 'mujhe', 'chahiye'];
+      const keywords = words.filter(w => !ignoreWords.includes(w));
+      const query = keywords.join(' ');
+      router.push(`/worker/search${query ? `?q=${encodeURIComponent(query)}` : ''}`);
+      return;
+    }
+
+    // Fallback: show status, don't navigate anywhere
+    setStatusMsg(`Command not recognized: "${speech}"`);
   };
 
   const toggleVoice = () => {
@@ -123,7 +213,10 @@ export default function GlobalVoiceAssistant() {
     }
 
     if (isListening) {
-      recognitionRef.current?.stop();
+      recognitionRef.current?.abort();
+      setIsListening(false);
+      setStatusMsg('Voice search stopped.');
+      hideTooltipAfterDelay();
     } else {
       try {
         const langCode = LANG_MAP[language] || 'en-IN';
@@ -136,7 +229,7 @@ export default function GlobalVoiceAssistant() {
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-[100] flex items-center">
+    <div className="fixed bottom-6 left-4 md:left-8 z-[100] flex items-center">
       <div className="relative">
         {/* Radar waves when listening */}
         {isListening && (

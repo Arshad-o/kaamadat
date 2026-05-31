@@ -1,22 +1,34 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useLanguage, languages } from '@/context/LanguageContext';
+import { useLanguage, languages, type Language } from '@/context/LanguageContext';
 import IndiaMapBackground from '@/components/IndiaMapBackground';
+import WalkingWorker from '@/components/WalkingWorker';
 
 export default function Home() {
   const { language, setLanguage, t } = useLanguage();
   const [showSplash, setShowSplash] = useState(true);
+  const [isFreshOpen, setIsFreshOpen] = useState(false);
 
-  // Persistent session auto-login redirect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsFreshOpen(true);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('kaammadat_user_logged_in') === 'true';
     const userType = localStorage.getItem('kaammadat_user_type');
     if (isLoggedIn && userType) {
       if (userType === 'worker') {
         window.location.href = '/worker/dashboard';
+      } else if (userType === 'part-time-worker') {
+        window.location.href = '/part-time-worker/dashboard';
       } else if (userType === 'job-giver') {
         window.location.href = '/job-giver/dashboard';
+      } else if (userType === 'part-time-job-giver') {
+        window.location.href = '/part-time-job-giver/dashboard';
       } else if (userType === 'admin') {
         window.location.href = '/admin/dashboard';
       }
@@ -32,7 +44,7 @@ export default function Home() {
   }, []);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLanguage(e.target.value as any);
+    setLanguage(e.target.value as Language);
   };
 
   const spokes = Array.from({ length: 24 }, (_, i) => i);
@@ -80,6 +92,34 @@ export default function Home() {
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Left Side: PT Box + Walking Worker */}
+      <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 flex items-end z-50">
+
+        {/* PT Jobs Box */}
+        <div className="flex flex-col gap-3 bg-white/90 p-5 rounded-2xl shadow-2xl border border-blue-100 backdrop-blur-md relative z-10 w-48 self-center">
+          <h3 className="text-xl font-black text-blue-900 text-center border-b border-blue-200 pb-2 mb-1">{t('part_time_jobs')}</h3>
+          <p className="text-xs text-blue-600 font-bold text-center mb-2">{t('for_students_labourers')}</p>
+          <Link href="/part-time-worker/register">
+            <button className="w-full px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold shadow-lg hover:shadow-blue-200 hover:-translate-y-0.5 active:translate-y-0 transition cursor-pointer text-sm">
+              {t('apply_as_worker')}
+            </button>
+          </Link>
+          <Link href="/part-time-job-giver/register">
+            <button className="w-full px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold shadow-lg hover:shadow-indigo-200 hover:-translate-y-0.5 active:translate-y-0 transition cursor-pointer text-sm">
+              {t('post_part_time_job')}
+            </button>
+          </Link>
+          <Link href="/part-time-login">
+            <button className="w-full mt-1 px-5 py-3 rounded-xl bg-white border-2 border-blue-200 text-blue-700 font-bold shadow-sm hover:bg-blue-50 hover:-translate-y-0.5 active:translate-y-0 transition cursor-pointer text-sm">
+              Part-Time Login
+            </button>
+          </Link>
+        </div>
+
+        {/* Worker — walks in from off-screen, stops beside PT box */}
+        {isFreshOpen && <WalkingWorker />}
       </div>
 
       <main className="flex flex-col items-center gap-8 text-center max-w-2xl mt-8">
@@ -167,15 +207,6 @@ export default function Home() {
           </Link>
         </div>
       </main>
-
-      {/* Floating Microphone Assistant */}
-      <button 
-        onClick={() => alert("Voice assistant starting... (Feature in development)")}
-        className="absolute bottom-8 right-8 w-14 h-14 bg-gradient-to-tr from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-2xl text-white shadow-[0_8px_30px_rgb(249,115,22,0.4)] hover:shadow-[0_8px_40px_rgb(249,115,22,0.6)] hover:-translate-y-1 transition-all cursor-pointer z-50 border-2 border-white/50 animate-[pulse_4s_infinite]"
-        title="Kaammadat Voice Assistant"
-      >
-        🎙️
-      </button>
     </div>
   );
 }
