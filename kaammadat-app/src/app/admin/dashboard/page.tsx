@@ -446,7 +446,16 @@ export default function AdminDashboard() {
                       <div
                         key={user.email}
                         className={`bg-white rounded-2xl border-2 shadow-sm transition cursor-pointer overflow-hidden ${isSelected ? 'border-orange-500 shadow-orange-100' : 'border-slate-200 hover:border-slate-300'}`}
-                        onClick={() => { setSelectedUser(isSelected ? null : user); setActionMsg(''); }}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedUser(null);
+                            setActionMsg('');
+                          } else {
+                            setSelectedUser(user);
+                            setCardTierSelect(tier);
+                            setActionMsg('');
+                          }
+                        }}
                       >
                         {/* User Header */}
                         <div className="p-5 flex items-center justify-between">
@@ -477,7 +486,7 @@ export default function AdminDashboard() {
 
                         {/* Expanded Details + Actions */}
                         {isSelected && (
-                          <div className="border-t border-slate-100 px-5 pb-5">
+                          <div className="border-t border-slate-100 px-5 pb-5" onClick={(e) => e.stopPropagation()}>
                             {/* Registration Details */}
                             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                               <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
