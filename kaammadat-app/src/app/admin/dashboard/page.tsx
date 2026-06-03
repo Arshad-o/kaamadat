@@ -486,7 +486,12 @@ export default function AdminDashboard() {
 
                         {/* Expanded Details + Actions */}
                         {isSelected && (
-                          <div className="border-t border-slate-100 px-5 pb-5" onClick={(e) => e.stopPropagation()}>
+                          <div
+                            className="border-t border-slate-100 px-5 pb-5"
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onMouseUp={(e) => e.stopPropagation()}
+                          >
                             {/* Registration Details */}
                             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                               <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
@@ -586,6 +591,9 @@ export default function AdminDashboard() {
                                   <select
                                     value={cardTierSelect}
                                     onChange={e => setCardTierSelect(e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onMouseUp={(e) => e.stopPropagation()}
                                     className="flex-1 px-3 py-2.5 rounded-lg border-2 border-indigo-200 bg-white text-slate-800 font-bold text-sm outline-none focus:border-indigo-500 cursor-pointer"
                                   >
                                     {CARD_TIERS.map(tier => (
