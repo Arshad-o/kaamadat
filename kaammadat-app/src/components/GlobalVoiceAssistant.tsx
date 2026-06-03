@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 
 const LANG_MAP: Record<string, string> = {
@@ -24,7 +24,14 @@ export default function GlobalVoiceAssistant() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
   const { language } = useLanguage();
+
+  // Only render on user pages, NOT admin pages
+  if (pathname?.includes('/admin')) {
+    return null;
+  }
+
   const recognitionRef = useRef<any>(null);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 

@@ -53,8 +53,8 @@ export default function GlobalFloatingMenu() {
     return () => window.removeEventListener('open-loyalty-card', handleOpenCard);
   }, []);
 
-  // Only appear on user dashboards
-  if (!pathname?.includes('/dashboard')) {
+  // Only appear on user dashboards, NOT admin dashboard
+  if (!pathname?.includes('/dashboard') || pathname?.includes('/admin')) {
     return null;
   }
 
