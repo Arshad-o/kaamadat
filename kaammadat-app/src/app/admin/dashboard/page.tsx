@@ -99,7 +99,14 @@ export default function AdminDashboard() {
     const res = await adminWarnUser(selectedUser.email);
     setActionLoading('');
     setActionMsg(res.success ? '⚠️ Warning sent! User will see a warning banner on next login.' : `Error: ${res.error}`);
-    if (res.success) await loadRealData();
+    if (res.success) {
+      const updatedUser = { ...selectedUser, warned: true, warnedAt: new Date().toISOString() };
+      setSelectedUser(updatedUser);
+      if (searchResults) {
+        setSearchResults(searchResults.map(u => u.email === selectedUser.email ? updatedUser : u));
+      }
+      await loadRealData();
+    }
   };
 
   const handleRemove = async () => {
@@ -126,7 +133,11 @@ export default function AdminDashboard() {
     setActionLoading('');
     setActionMsg(res.success ? `🏅 Card updated to ${cardTierSelect} for ${selectedUser.name}!` : `Error: ${res.error}`);
     if (res.success) {
-      setSelectedUser({ ...selectedUser, cardOverride: cardTierSelect });
+      const updatedUser = { ...selectedUser, cardOverride: cardTierSelect };
+      setSelectedUser(updatedUser);
+      if (searchResults) {
+        setSearchResults(searchResults.map(u => u.email === selectedUser.email ? updatedUser : u));
+      }
       await loadRealData();
     }
   };
