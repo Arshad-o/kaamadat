@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { postJob } from '@/app/actions/jobActions';
@@ -9,6 +9,8 @@ import { playNotificationSound } from '@/utils/playSound';
 import IndiaMapBackground from '@/components/IndiaMapBackground';
 import { indiaLocations } from '@/data/indiaLocations';
 import { districtMandals } from '@/data/mandals';
+import { getEffectiveCardTier, CARD_STYLES, CardTier } from '@/utils/cardTier';
+import { getUsers } from '@/app/actions/userActions';
 
 export default function PostJob() {
   const { t } = useLanguage();
@@ -16,7 +18,23 @@ export default function PostJob() {
   const formRef = useRef<HTMLFormElement>(null);
   
   const [fee, setFee] = useState(30);
-  const discount = 0; // No discount for part time
+  const [cardTier, setCardTier] = useState<CardTier>('Bronze');
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('kaammadat_user_email');
+    if (savedEmail) {
+      getUsers().then(users => {
+        const u = users.find(x => x?.email === savedEmail);
+        if (u) {
+          const tier = getEffectiveCardTier(u);
+          setCardTier(tier);
+        }
+      });
+    }
+  }, []);
+
+  const discountPercent = parseInt(CARD_STYLES[cardTier].discount) || 0;
+  const discount = (fee * discountPercent) / 100;
   const finalFee = fee - discount;
 
   const [posted, setPosted] = useState(false);
@@ -449,6 +467,12 @@ export default function PostJob() {
           <div className="mt-4 bg-yellow-50 p-5 rounded-2xl border border-yellow-200 shadow-sm">
              <h4 className="font-bold text-yellow-800 mb-3 text-base">Payment Breakdown</h4>
              <div className="flex justify-between text-sm mb-2 font-medium text-gray-600"><span>Base Posting Fee:</span><span>₹{fee.toFixed(2)}</span></div>
+             {discount > 0 && (
+               <div className="flex justify-between text-sm text-green-600 mb-2 font-bold">
+                 <span>{cardTier} Card Discount ({CARD_STYLES[cardTier].discount}):</span>
+                 <span>-₹{discount.toFixed(2)}</span>
+               </div>
+             )}
              <div className="flex justify-between font-black text-xl mt-3 pt-3 border-t border-yellow-300 text-yellow-900"><span>Total to Pay:</span><span>₹{finalFee.toFixed(2)}</span></div>
           </div>
 

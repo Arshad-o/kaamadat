@@ -101,6 +101,7 @@ export default function WorkerRegister() {
       data.append('address', formData.address);
       data.append('password', formData.password);
       data.append('type', 'part-time-worker');
+      data.append('kycVerified', kycVerified ? 'true' : 'false');
 
       // Trigger the real-time registration & OTP transmission
       const result = await registerUser(data) as any;

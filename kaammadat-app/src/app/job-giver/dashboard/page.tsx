@@ -5,6 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { getJobs } from '@/app/actions/jobActions';
 import { getUsers } from '@/app/actions/userActions';
 import LogoutModal from '@/components/LogoutModal';
+import { getEffectiveCardTier, CARD_STYLES, CardTier } from '@/utils/cardTier';
 
 export default function JobGiverDashboard() {
   const { t } = useLanguage();
@@ -13,6 +14,7 @@ export default function JobGiverDashboard() {
   const [showLogout, setShowLogout] = useState(false);
   const [kycVerified, setKycVerified] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState('');
+  const [cardTier, setCardTier] = useState<CardTier>('Bronze');
 
   useEffect(() => {
     const savedName = localStorage.getItem('kaammadat_user_name');
@@ -22,7 +24,11 @@ export default function JobGiverDashboard() {
     if (savedEmail) {
       getUsers().then(users => {
         const u = users.find(x => x?.email === savedEmail);
-        if (u && u.kycVerified) setKycVerified(true);
+        if (u) {
+          if (u.kycVerified) setKycVerified(true);
+          const tier = getEffectiveCardTier(u);
+          setCardTier(tier);
+        }
       });
     }
 
@@ -100,16 +106,16 @@ export default function JobGiverDashboard() {
           <h3 className="text-xl font-bold mb-1">{t('loyalty_card')}</h3>
           <p className="text-sm text-gray-300 mb-4">Your current tier and benefits</p>
           
-          <div className="bg-gradient-to-br from-yellow-600 to-yellow-800 w-full max-w-sm rounded-xl p-4 shadow-inner text-white border border-yellow-500">
+          <div className={`bg-gradient-to-br ${CARD_STYLES[cardTier].bg} w-full max-w-sm rounded-xl p-4 shadow-inner text-white border ${CARD_STYLES[cardTier].border}`}>
              <div className="flex justify-between items-start">
-               <span className="font-bold tracking-widest uppercase">Gold Tier</span>
+               <span className="font-bold tracking-widest uppercase">{cardTier} Tier</span>
                <span className="text-xs font-bold">KAAMMADAT</span>
              </div>
              <div className="mt-6">
                 <p className="font-mono text-lg">**** **** **** 8821</p>
                 <div className="flex justify-between items-end mt-2">
                    <p className="text-sm font-semibold uppercase">{giverName}</p>
-                   <p className="text-xs font-bold bg-white text-yellow-800 px-2 py-1 rounded">5% OFF POSTING</p>
+                   <p className={`text-xs font-bold bg-white px-2 py-1 rounded ${cardTier === 'Bronze' ? 'text-orange-900' : cardTier === 'Silver' ? 'text-gray-700' : cardTier === 'Gold' ? 'text-yellow-950' : 'text-slate-900'}`}>{CARD_STYLES[cardTier].discount} OFF POSTING</p>
                 </div>
              </div>
           </div>

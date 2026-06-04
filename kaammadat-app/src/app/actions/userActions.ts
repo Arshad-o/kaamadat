@@ -7,9 +7,15 @@ import { supabase } from '@/utils/supabase';
 // Helper to map Supabase user row to frontend expected format
 function mapUser(u: any) {
   if (!u) return null;
+  let name = u.full_name || '';
+  let kycVerified = false;
+  if (name.endsWith(' [KYC_VERIFIED]')) {
+    name = name.slice(0, -' [KYC_VERIFIED]'.length);
+    kycVerified = true;
+  }
   return {
     id: u.id,
-    name: u.full_name,
+    name: name,
     mobile: u.mobile_number,
     email: u.email_id,
     aadhar: u.aadhar_number,
@@ -19,19 +25,38 @@ function mapUser(u: any) {
     warned: u.warned,
     warnedAt: u.warned_at,
     cardOverride: u.card_tier,
-    kycVerified: u.kyc_verified || false,
+    kycVerified: kycVerified,
+    createdAt: u.created_at,
   };
 }
 
 export async function markKycVerified(email: string) {
   try {
-    const { error } = await supabase
+    // Fetch user's current full name to append suffix
+    const { data: users, error: fetchError } = await supabase
       .from('users')
-      .update({ kyc_verified: true })
+      .select('full_name')
       .eq('email_id', email);
-    if (error) throw error;
+
+    if (fetchError || !users || users.length === 0) {
+      throw fetchError || new Error("User not found");
+    }
+
+    const currentName = users[0].full_name || '';
+    if (currentName.endsWith(' [KYC_VERIFIED]')) {
+      return { success: true };
+    }
+
+    const newName = `${currentName} [KYC_VERIFIED]`;
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ full_name: newName })
+      .eq('email_id', email);
+
+    if (updateError) throw updateError;
     return { success: true };
   } catch (error: any) {
+    console.error("Error marking KYC verified:", error);
     return { success: false, error: error.message };
   }
 }
@@ -78,6 +103,7 @@ export async function registerUser(formData: FormData) {
     const address = formData.get('address') as string;
     const password = formData.get('password') as string;
     const type = formData.get('type') as 'worker' | 'job-giver' | 'part-time-worker' | 'part-time-job-giver';
+    const kycVerified = formData.get('kycVerified') === 'true';
 
     const dbRole = (type === 'part-time-worker') ? 'worker' : 
                    (type === 'part-time-job-giver') ? 'job-giver' : 
@@ -117,9 +143,10 @@ export async function registerUser(formData: FormData) {
     // Add new user
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const fullNameToSave = kycVerified ? `${name} [KYC_VERIFIED]` : name;
 
     const { error } = await supabase.from('users').insert([{
-      full_name: name,
+      full_name: fullNameToSave,
       mobile_number: mobile,
       email_id: email,
       aadhar_number: aadhar || null,
@@ -185,6 +212,13 @@ export async function loginUser(identifier: string, password: string, type: 'adm
       return { success: false, error: 'Incorrect password.' };
     }
 
+    let cleanName = user.full_name || '';
+    let kycVerified = false;
+    if (cleanName.endsWith(' [KYC_VERIFIED]')) {
+      cleanName = cleanName.slice(0, -' [KYC_VERIFIED]'.length);
+      kycVerified = true;
+    }
+
     if (type === 'admin') {
       const cookieStore = await cookies();
       cookieStore.set('kaammadat_authenticated', 'true', { maxAge: 86400, path: '/' });
@@ -193,13 +227,13 @@ export async function loginUser(identifier: string, password: string, type: 'adm
       
       return { 
         success: true, 
-        user: { name: user.full_name, email: user.email_id, mobile: user.mobile_number, type: user.role } 
+        user: { name: cleanName, email: user.email_id, mobile: user.mobile_number, type: user.role, kycVerified } 
       };
     } else {
       const otpResult = await sendOTP(user.email_id);
       return {
         success: true,
-        user: { name: user.full_name, email: user.email_id, mobile: user.mobile_number, type: user.role },
+        user: { name: cleanName, email: user.email_id, mobile: user.mobile_number, type: user.role, kycVerified },
         otpResult
       };
     }
